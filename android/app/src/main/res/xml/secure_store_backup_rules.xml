@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  VegTrace app-level backup rules. android:allowBackup="false" already
+  disables backups entirely; these excludes are defense in depth and
+  override (merge on top of) the expo-secure-store library rules. They
+  keep user scan data out of any backup: the VegTrace SQLite cache, the
+  AsyncStorage backends, and secure storage shared prefs.
+-->
+<full-backup-content>
+  <exclude domain="database" path="vegtrace.db"/>
+  <exclude domain="database" path="vegtrace.db-journal"/>
+  <exclude domain="database" path="vegtrace.db-wal"/>
+  <exclude domain="database" path="vegtrace.db-shm"/>
+  <exclude domain="database" path="AsyncStorage"/>
+  <exclude domain="database" path="AsyncStorage-journal"/>
+  <exclude domain="database" path="AsyncStorage-wal"/>
+  <exclude domain="database" path="AsyncStorage-shm"/>
+  <exclude domain="database" path="RKStorage"/>
+  <exclude domain="database" path="RKStorage-journal"/>
+  <exclude domain="database" path="RKStorage-wal"/>
+  <exclude domain="database" path="RKStorage-shm"/>
+  <exclude domain="sharedpref" path="SecureStore"/>
+  <exclude domain="sharedpref" path="SecureStore.xml"/>
+  <exclude domain="sharedpref" path="RKAsyncStorageDB.xml"/>
+</full-backup-content>

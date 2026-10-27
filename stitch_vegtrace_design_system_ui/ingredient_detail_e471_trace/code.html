@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-fixed": "#40000d", "inverse-primary": "#ffb2b6", "on-primary-container": "#fffbff", "surface": "#fbf9f8", "surface-container-lowest": "#ffffff", "tertiary": "#006c03", "on-secondary-container": "#636262", "on-tertiary-container": "#f8ffef", "on-tertiary": "#ffffff", "on-background": "#1b1c1c", "surface-container-high": "#e9e8e7", "error-container": "#ffdad6", "tertiary-fixed": "#88fc73", "error": "#ba1a1a", "surface-bright": "#fbf9f8", "secondary-fixed-dim": "#c8c6c5", "background": "#fbf9f8", "on-tertiary-fixed": "#002200", "surface-container-highest": "#e4e2e2", "on-tertiary-fixed-variant": "#005301", "primary": "#ba0036", "primary-container": "#e21e4a", "secondary": "#5f5e5e", "surface-dim": "#dbdad9", "surface-container": "#efeded", "inverse-on-surface": "#f2f0f0", "primary-fixed-dim": "#ffb2b6", "on-primary-fixed-variant": "#920029", "on-secondary-fixed-variant": "#474746", "inverse-surface": "#303031", "on-error-container": "#93000a", "on-secondary-fixed": "#1b1c1c", "on-secondary": "#ffffff", "outline": "#906f70", "on-primary": "#ffffff", "on-surface-variant": "#5c3f41", "outline-variant": "#e5bdbe", "surface-variant": "#e4e2e2", "surface-tint": "#be0038", "secondary-container": "#e2dfde", "surface-container-low": "#f5f3f3", "on-surface": "#1b1c1c", "secondary-fixed": "#e5e2e1", "on-error": "#ffffff", "tertiary-fixed-dim": "#6cdf5a", "tertiary-container": "#008805", "primary-fixed": "#ffdada" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin": "1.5rem", "gutter": "1rem", "space-sm": "0.5rem", "space-xl": "2rem" }, "fontFamily": { "body-md": ["Inter"], "body-sm": ["Inter"], "badge": ["Inter"], "display-xl": ["Inter"], "display-md": ["Inter"], "display-lg": ["Inter"], "caption": ["Inter"], "title-md": ["Inter"], "micro": ["Inter"] }, "fontSize": { "body-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "badge": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "display-xl": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display-md": ["21px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "caption": ["14px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "micro": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface flex flex-col min-h-screen antialiased select-none"><header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-xs"><button aria-label="Go back" class="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full text-on-surface hover:bg-secondary-container/40 transition-colors focus:outline-none" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[22px]">arrow_back_ios_new</span></button><h1 class="font-title-md text-title-md text-on-surface truncate">Item Verification Detail</h1></div><button aria-label="Profile" class="min-w-[48px] min-h-[48px] flex items-center justify-end rounded-full focus:outline-none" type="button"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></button></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-safe"><div class="flex flex-col w-full pb-8">
+<!-- Interactive Pill Filter Tab Bar -->
+<div class="px-margin pt-4 pb-2">
+<div class="p-1 rounded-full bg-surface-container flex items-center justify-between text-on-secondary-container">
+<button class="flex-1 py-1.5 px-3 rounded-full text-center font-caption text-caption transition-all bg-surface-container-lowest text-on-surface shadow-sm" id="tab-overview" onclick="switchDetailTab('overview')" type="button">
+        Ingredient Dossier
+      </button>
+<button class="flex-1 py-1.5 px-3 rounded-full text-center font-caption text-caption transition-all text-secondary" id="tab-citations" onclick="switchDetailTab('citations')" type="button">
+        Evidence (3)
+      </button>
+</div>
+</div>
+<div class="flex flex-col space-y-6 px-margin pt-2" id="view-overview">
+<!-- Header Hero Tile -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-start justify-between gap-space-sm mb-3">
+<div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-badge text-badge tracking-wider">
+              FOOD ADDITIVE
+            </span>
+<span class="font-micro text-micro text-secondary font-medium">INS 471</span>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-surface mt-1 tracking-tight">
+            E471
+          </h2>
+<p class="font-title-md text-title-md text-on-surface-variant font-medium mt-0.5">
+            Mono- and diglycerides of fatty acids
+          </p>
+</div>
+<!-- Ambiguous / Source-Dependent Badge -->
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-fixed">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+<span class="font-badge text-badge text-on-secondary-fixed uppercase tracking-wider">Source Dependent</span>
+</div>
+</div>
+<!-- Common Aliases Tag Cloud -->
+<div class="pt-3 flex flex-wrap items-center gap-1.5">
+<span class="font-micro text-micro text-secondary">Common aliases:</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-micro text-micro">
+          Glyceryl monostearate
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-micro text-micro">
+          Emulsifier 471
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-micro text-micro">
+          Distilled monoglyceride
+        </span>
+</div>
+</div>
+<!-- Visual Traceability Micro-Illustration -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low p-space-md">
+<div class="flex items-center gap-space-md">
+<img class="w-16 h-16 rounded-lg object-cover flex-shrink-0" data-alt="Macro laboratory photograph of refined pure vegetable oil interacting with natural glycerides, subtle warmth, studio food science lighting, ultra high resolution editorial aesthetic in neutral beige tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6KFkb8BIslXMuUkp55ciz8UfyhdRa3QqdRha1oN5wR5DWbA4xDQtUipXXS_AjNLICuYfpWy_OoRBv2hNrR7t5upi2Y3Sd0x56m3PmTmzGJV7rABEql1IiMJTEHI06N53R7Al9-n5aGTzK7z-soSmjU4IDiWCTtEe2PODhS3Ss8FURe1Q6TtbF5LJfMst7JRTj83ykttCBWOn-fDJuxLCR-cF_zXcpkUZFfrg_BamO8JUXCq5SOIU4"/>
+<div class="flex-1 min-w-0">
+<p class="font-caption text-caption text-on-surface">Synthesis Ambiguity</p>
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2">Produced via glycerolysis of commercial lipids. Molecular profiles mirror both plant and animal base stocks.</p>
+</div>
+</div>
+</div>
+<!-- Origin Spectrum Visual Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Global Origin Spectrum</h3>
+<p class="font-body-sm text-body-sm text-secondary">Aggregate statistical supply chain distribution</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]">pie_chart</span>
+</div>
+<!-- Multi-bar Ratio Visual -->
+<div class="space-y-2">
+<div class="h-3 w-full bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-tertiary transition-all duration-500" style="width: 55%;" title="Plant Lipids: 55%"></div>
+<div class="h-full bg-primary-container transition-all duration-500" style="width: 45%;" title="Animal Lipids: 45%"></div>
+</div>
+<div class="flex items-center justify-between font-caption text-caption pt-1">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+<span class="text-on-surface font-medium">55% Commercial Plant Lipids</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span class="text-on-surface font-medium">45% Animal Lipids</span>
+</div>
+</div>
+</div>
+<!-- Sourcing Granularity Grid -->
+<div class="grid grid-cols-2 gap-space-sm pt-2">
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col space-y-1">
+<div class="flex items-center gap-1.5 text-tertiary">
+<span class="material-symbols-outlined text-[16px]">eco</span>
+<span class="font-badge text-badge uppercase">Flora Sources</span>
+</div>
+<p class="font-micro text-micro text-secondary pt-0.5">
+            Fractionated palm oil, soybean oil, canola, and sunflower lipids.
+          </p>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex flex-col space-y-1">
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-[16px]">pets</span>
+<span class="font-badge text-badge uppercase">Fauna Sources</span>
+</div>
+<p class="font-micro text-micro text-secondary pt-0.5">
+            Rendered bovine tallow and industrial porcine lard fractions.
+          </p>
+</div>
+</div>
+<!-- Chemical Equivalence Explainer -->
+<div class="p-3 rounded-lg bg-surface-container flex items-start gap-2.5">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">biotech</span>
+<p class="font-micro text-micro text-on-surface leading-relaxed">
+          Synthesized through industrial glycerolysis. Chemical structure is identical regardless of origin; conventional analytical chemistry cannot distinguish plant from animal fatty acid tails without deep isotopic resonance spectrometry.
+        </p>
+</div>
+</div>
+<!-- Manufacturer Disclosure Status -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<h3 class="font-title-md text-title-md text-on-surface">Packaging Disclosure</h3>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-badge text-badge">
+          NOT DISCLOSED
+        </span>
+</div>
+<div class="p-3 rounded-lg bg-primary-fixed/30 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5">info</span>
+<div class="space-y-1">
+<p class="font-caption text-caption text-on-surface">Voluntary Labeling Jurisdiction</p>
+<p class="font-body-sm text-body-sm text-secondary">
+            Under global standards (FDA 21 CFR & FSSAI guidelines), specifying the lipid feedstock origin is voluntary unless the finished goods declare third-party Halal, Kosher, or statutory Green Dot vegetarian certifications.
+          </p>
+</div>
+</div>
+</div>
+<!-- Verification Audit Snapshot -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md text-on-surface">Audit Trail Samples</h3>
+<span class="font-caption text-caption text-primary font-medium">14 SKUs Audited</span>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-12 h-12 rounded-lg object-cover" data-alt="Clean macro shot of a packaged snack food nutritional label emphasizing the ingredients statement in soft daylight against a pristine minimalist white table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx0ARP8nxj_AuDss9rVYRs3xaUeVT9hzW2Gv-CQC4lic6N_jBwxUNAed4WsDhtcNfyy5aJp2Az1Z1DO7Oe6YgQLOR9Fyx0Kmx3832XmwDS-7jdNuWEpV9ygTLTMJbIyY3zOR-_tiKrvbg_I6vrwYJlqzDA2TBdXpyY7O2_19yST6c_jppPFeTZjU0MgH32cdZxo7Aq-iai1rmwiZrrWF6Zy4nt_mXAil4QhffEcBftbFqQSFk5bDIW"/>
+<div class="flex-1 min-w-0">
+<p class="font-caption text-caption text-on-surface truncate">Commercial Emulsifier Feed</p>
+<p class="font-micro text-micro text-secondary">3 Certified Plant-Based • 11 Undisclosed</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+</div>
+</div>
+</div>
+<!-- Citations Tab View (Toggled) -->
+<div class="hidden flex flex-col space-y-4 px-margin pt-2" id="view-citations">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-4">
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Public Database Records</h3>
+<p class="font-body-sm text-body-sm text-secondary">Verified regulatory and community taxonomies</p>
+</div>
+<!-- Citation 1 -->
+<div class="p-3.5 rounded-lg bg-surface-container-low space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-on-surface font-medium">1. Open Food Facts Taxonomy</span>
+<span class="font-badge text-badge px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed">
+            en:e471
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">
+          Aggregated international registry flags this substance as origin-ambiguous. Flags automated non-vegan alerts unless auxiliary producer documentation is linked.
+        </p>
+</div>
+<!-- Citation 2 -->
+<div class="p-3.5 rounded-lg bg-surface-container-low space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-on-surface font-medium">2. EFSA Scientific Opinion</span>
+<span class="font-badge text-badge px-2 py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container">
+            Re-evaluated
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">
+          European Food Safety Authority re-evaluation panel confirms industrial edible fats used in production derive optionally from both rendered animal carcasses and cultivated oilseed crops.
+        </p>
+</div>
+<!-- Citation 3 -->
+<div class="p-3.5 rounded-lg bg-surface-container-low space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-on-surface font-medium">3. Brand Sourcing Survey (2024)</span>
+<span class="font-badge text-badge px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface">
+            N=14 SKUs
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">
+          VegTrace field testing across 14 commercial bakery and spread lines: 3 brand portfolios confirmed 100% plant-derived monoglycerides via supplier CoA, while 11 maintain undisclosed open supply contracts.
+        </p>
+</div>
+</div>
+</div>
+<!-- Bottom CTA Actions -->
+<div class="px-margin pt-6 pb-2 space-y-3">
+<button class="w-full h-12 rounded-lg bg-primary text-on-primary font-caption text-caption flex items-center justify-center gap-2 active:scale-[0.99] transition-transform shadow-sm hover:bg-primary-container" onclick="handleAlternativeSearch()" type="button">
+<span class="material-symbols-outlined text-[18px]">travel_explore</span>
+      Find Verified Plant-Based Alternatives
+    </button>
+<button class="w-full h-12 rounded-lg bg-transparent text-on-surface font-caption text-caption flex items-center justify-center gap-2 hover:bg-surface-container active:scale-[0.99] transition-colors" onclick="handleReportUpdate()" type="button">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+      Report Manufacturer Update
+    </button>
+</div>
+</div>
+<script>
+  function switchDetailTab(tabKey) {
+    const overviewEl = document.getElementById('view-overview');
+    const citationsEl = document.getElementById('view-citations');
+    const btnOverview = document.getElementById('tab-overview');
+    const btnCitations = document.getElementById('tab-citations');
+
+    if (tabKey === 'citations') {
+      overviewEl.classList.add('hidden');
+      citationsEl.classList.remove('hidden');
+      btnCitations.classList.add('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm');
+      btnCitations.classList.remove('text-secondary');
+      btnOverview.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm');
+      btnOverview.classList.add('text-secondary');
+    } else {
+      citationsEl.classList.add('hidden');
+      overviewEl.classList.remove('hidden');
+      btnOverview.classList.add('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm');
+      btnOverview.classList.remove('text-secondary');
+      btnCitations.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'shadow-sm');
+      btnCitations.classList.add('text-secondary');
+    }
+  }
+
+  function handleAlternativeSearch() {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span> Scanning safe alternatives...';
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+    }, 1200);
+  }
+
+  function handleReportUpdate() {
+    alert("Opening community label contribution module for E471.");
+  }
+</script></main></body></html>

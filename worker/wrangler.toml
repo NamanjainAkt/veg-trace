@@ -1,0 +1,11 @@
+name = "vegtrace-verify"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+OFF_BASE_URL = "https://world.openfoodfacts.org"
+CACHE_TTL_DAYS = "30"
+
+# Secrets (set with `wrangler secret put` before deploy):
+# SEARCH_API_KEY — manufacturer web-search provider (optional v0: skipped)
+# AI_API_KEY     — structured-evidence model (optional v0: rule-based only)

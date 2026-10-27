@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-fixed": "#40000d", "inverse-primary": "#ffb2b6", "on-primary-container": "#fffbff", "surface": "#fbf9f8", "surface-container-lowest": "#ffffff", "tertiary": "#006c03", "on-secondary-container": "#636262", "on-tertiary-container": "#f8ffef", "on-tertiary": "#ffffff", "on-background": "#1b1c1c", "surface-container-high": "#e9e8e7", "error-container": "#ffdad6", "tertiary-fixed": "#88fc73", "error": "#ba1a1a", "surface-bright": "#fbf9f8", "secondary-fixed-dim": "#c8c6c5", "background": "#fbf9f8", "on-tertiary-fixed": "#002200", "surface-container-highest": "#e4e2e2", "on-tertiary-fixed-variant": "#005301", "primary": "#ba0036", "primary-container": "#e21e4a", "secondary": "#5f5e5e", "surface-dim": "#dbdad9", "surface-container": "#efeded", "inverse-on-surface": "#f2f0f0", "primary-fixed-dim": "#ffb2b6", "on-primary-fixed-variant": "#920029", "on-secondary-fixed-variant": "#474746", "inverse-surface": "#303031", "on-error-container": "#93000a", "on-secondary-fixed": "#1b1c1c", "on-secondary": "#ffffff", "outline": "#906f70", "on-primary": "#ffffff", "on-surface-variant": "#5c3f41", "outline-variant": "#e5bdbe", "surface-variant": "#e4e2e2", "surface-tint": "#be0038", "secondary-container": "#e2dfde", "surface-container-low": "#f5f3f3", "on-surface": "#1b1c1c", "secondary-fixed": "#e5e2e1", "on-error": "#ffffff", "tertiary-fixed-dim": "#6cdf5a", "tertiary-container": "#008805", "primary-fixed": "#ffdada" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin": "1.5rem", "gutter": "1rem", "space-sm": "0.5rem", "space-xl": "2rem" }, "fontFamily": { "body-md": ["Inter"], "body-sm": ["Inter"], "badge": ["Inter"], "display-xl": ["Inter"], "display-md": ["Inter"], "display-lg": ["Inter"], "caption": ["Inter"], "title-md": ["Inter"], "micro": ["Inter"] }, "fontSize": { "body-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "badge": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "display-xl": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display-md": ["21px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "caption": ["14px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "micro": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface flex flex-col min-h-screen antialiased select-none"><header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-xs"><button aria-label="Go back" class="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full text-on-surface hover:bg-secondary-container/40 transition-colors focus:outline-none" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[22px]">arrow_back_ios_new</span></button><h1 class="font-title-md text-title-md text-on-surface truncate">Item Verification Detail</h1></div><button aria-label="Profile" class="min-w-[48px] min-h-[48px] flex items-center justify-end rounded-full focus:outline-none" type="button"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></button></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface pb-safe"><div class="flex flex-col w-full pb-8">
+<!-- Offline / Local Verification Banner -->
+<div class="px-gutter pt-3 pb-2 flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-tertiary">offline_pin</span>
+<span class="font-micro text-micro font-medium">Processed locally via SQLite Knowledge Base</span>
+</div>
+<span class="font-micro text-micro text-secondary">v4.18.2</span>
+</div>
+<!-- Product Hero Identification Card -->
+<div class="px-gutter mt-2">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex gap-space-md items-center">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="Editorial close-up of a premium gold-and-red packaged British biscuit box on a pristine white minimalist tabletop, warm side lighting, high clarity, realistic commercial packaging photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjmM8N3dSGgOoDa2RB4VmzmaDtT7gZLJ-1hVOcOu8beLg7nxcKuLenhyMGA8PhId3XODr1om5icF6Jxg9FlecyOgtyZpQ6lE-n9R8xdmNq29zevh0kAvOGz8mcP0J80q5UgZISA47D2txTQfG4crA67BF_Jl_X3bBFzFSTlI8gmSe6C6rroKqadMEvyRLngMbPWwU0GjR3nBmQvrEa3Ku59AfDgIh2OfJCsz-W_7zHKYl9uOyAqaA6"/>
+<div class="absolute bottom-1 right-1 bg-surface-container-lowest/90 px-1 py-0.5 rounded text-[9px] font-caption tracking-tight">
+          4:3
+        </div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-badge text-badge uppercase tracking-wider">Britannia</span>
+<span class="inline-flex items-center gap-1 text-[11px] font-caption text-secondary">
+<span class="material-symbols-outlined text-[12px] text-tertiary">verified</span>
+            OFF DB Match
+          </span>
+</div>
+<h2 class="font-title-md text-title-md text-on-surface truncate">Classic Butter Rich Biscuits</h2>
+<div class="flex items-center gap-2 mt-1 text-secondary font-caption text-caption">
+<span class="material-symbols-outlined text-[15px]">barcode_scanner</span>
+<span class="font-mono text-micro tracking-tight">8901063012485</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Primary Verdict Banner (Section 15) -->
+<div class="px-gutter mt-4">
+<div class="bg-[#FFF7ED] rounded-[14px] p-space-md shadow-sm relative overflow-hidden">
+<!-- Subtle top decorative accent strip using theme compatible color -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-[#EA580C]"></div>
+<div class="flex items-start gap-2.5">
+<div class="w-8 h-8 rounded-full bg-[#FFEDD5] flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[#EA580C] text-[20px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md font-bold text-[#9A3412] tracking-tight">
+              SOURCE UNDISCLOSED
+            </h3>
+<span class="px-2 py-0.5 rounded-full bg-[#FFEDD5] text-[#9A3412] font-badge text-badge">
+              AMBIGUOUS
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-[#7C2D12] mt-1.5 leading-relaxed">
+<strong class="font-semibold">E471</strong> was detected in this formulation. E471 can biochemically originate from either plant fats (palm/soy) or animal lipids (bovine/swine tallow). The manufacturer has not declared raw origin.
+          </p>
+<!-- Philosophy Callout -->
+<div class="mt-3.5 pt-3 bg-white/70 rounded-lg p-2.5 flex items-start gap-2">
+<span class="material-symbols-outlined text-[#EA580C] text-[16px] flex-shrink-0 mt-0.5">balance</span>
+<p class="font-caption text-caption text-[#9A3412] leading-snug">
+<span class="font-semibold">Known ≠ Assumed.</span> We do not assume vegetarian status when animal synthesis remains biochemically possible.
+            </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Primary Interactive Actions -->
+<div class="px-gutter mt-4 flex flex-col gap-2.5">
+<button class="w-full h-12 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-caption text-caption flex items-center justify-center gap-2 active:scale-[0.99] transition-all shadow-sm" onclick="handleVerificationRequest(this)" type="button">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span id="btn-request-text">Request Source Verification</span>
+</button>
+<button class="w-full h-12 rounded-lg bg-surface-container-lowest text-on-surface font-caption text-caption flex items-center justify-center gap-2 hover:bg-surface-container-low active:scale-[0.99] transition-all shadow-sm" onclick="scrollToEvidence()" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">library_books</span>
+<span>View Evidence & Sourcing Trail</span>
+</button>
+</div>
+<!-- Ingredient Analysis Breakdown -->
+<div class="px-gutter mt-6">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<h3 class="font-title-md text-title-md text-on-surface">Ingredient Analysis</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-badge text-badge">6 Identified</span>
+</div>
+<span class="font-micro text-micro text-secondary">Tap items for trace notes</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Ingredient 1: Wheat Flour -->
+<div class="p-space-md flex items-center justify-between transition-colors hover:bg-surface-container-low min-h-[56px]">
+<div class="flex items-center gap-3 min-w-0 pr-2">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary flex-shrink-0"></div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface truncate">Wheat Flour</span>
+<span class="font-caption text-caption text-secondary">Cereal Grain Base</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low text-tertiary flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">eco</span>
+<span class="font-badge text-badge">Plant origin</span>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Ingredient 2: Sugar -->
+<div class="p-space-md flex items-center justify-between transition-colors hover:bg-surface-container-low min-h-[56px]">
+<div class="flex items-center gap-3 min-w-0 pr-2">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary flex-shrink-0"></div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface truncate">Sugar</span>
+<span class="font-caption text-caption text-secondary">Cane sugar (Refined)</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low text-tertiary flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span class="font-badge text-badge">Plant origin</span>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Ingredient 3: Butter -->
+<div class="p-space-md flex items-center justify-between transition-colors hover:bg-surface-container-low min-h-[56px]">
+<div class="flex items-center gap-3 min-w-0 pr-2">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary flex-shrink-0"></div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface truncate">Butter (Milk)</span>
+<span class="font-caption text-caption text-secondary">Dairy derived fat</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low text-tertiary flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">cloud_sync</span>
+<span class="font-badge text-badge">Vegetarian</span>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Ingredient 4: E471 (Deep Trace Trigger) -->
+<button class="p-space-md flex items-center justify-between transition-colors bg-[#FFF7ED]/50 hover:bg-[#FFEDD5]/60 text-left min-h-[64px] active:scale-[0.99]" onclick="toggleTraceModal()" type="button">
+<div class="flex items-center gap-3 min-w-0 pr-2">
+<div class="w-3 h-3 rounded-full bg-[#EA580C] flex-shrink-0 animate-pulse"></div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1">
+<span class="font-title-md text-title-md font-bold text-[#9A3412] truncate">E471</span>
+<span class="font-caption text-caption text-[#9A3412] truncate">(Mono & Diglycerides)</span>
+</div>
+<span class="font-micro text-micro text-[#9A3412] flex items-center gap-1 mt-0.5">
+<span>Deep trace available</span>
+<span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+</span>
+</div>
+</div>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFEDD5] text-[#9A3412] flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">help</span>
+<span class="font-badge text-badge uppercase">Undisclosed</span>
+</div>
+</button>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Ingredient 5: E500ii -->
+<div class="p-space-md flex items-center justify-between transition-colors hover:bg-surface-container-low min-h-[56px]">
+<div class="flex items-center gap-3 min-w-0 pr-2">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary flex-shrink-0"></div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface truncate">E500ii</span>
+<span class="font-caption text-caption text-secondary">Raising Agent (Sodium bicarbonate)</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low text-tertiary flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">diamond</span>
+<span class="font-badge text-badge">Mineral origin</span>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Ingredient 6: Artificial Vanilla Flavor -->
+<div class="p-space-md flex items-center justify-between transition-colors hover:bg-surface-container-low min-h-[56px]">
+<div class="flex items-center gap-3 min-w-0 pr-2">
+<div class="w-2.5 h-2.5 rounded-full bg-secondary flex-shrink-0"></div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface truncate">Artificial Vanilla Flavor</span>
+<span class="font-caption text-caption text-secondary">Synthetic Vanillin (Non-animal)</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low text-secondary flex-shrink-0">
+<span class="material-symbols-outlined text-[14px]">science</span>
+<span class="font-badge text-badge">Synthetic Safe</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Deep Trace & Sourcing Evidence Section (Section 17) -->
+<div class="px-gutter mt-8" id="evidence-section">
+<div class="flex items-center justify-between mb-3">
+<h3 class="font-title-md text-title-md text-on-surface">Verification Trail</h3>
+<span class="font-micro text-micro text-secondary">Audit Trail #TR-9014</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-4">
+<!-- Check 1: Open Food Facts -->
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded-full bg-surface-container-low text-tertiary flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface">Open Food Facts Database</span>
+<span class="font-badge text-badge text-tertiary uppercase">Matched</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">
+            OCR scan matches public repository records updated 14 days ago. Formula checksum verified.
+          </p>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Check 2: Physical Packaging -->
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded-full bg-surface-container-low text-tertiary flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface">Physical Packaging Scan</span>
+<span class="font-badge text-badge text-tertiary uppercase">Recorded</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">
+            Ingredient listing specifies strictly: <span class="italic font-caption">"Emulsifier (471)"</span> without customary "from vegetable fats" parenthetical suffix.
+          </p>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-container"></div>
+<!-- Check 3: Customer Care Inquiry -->
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded-full bg-[#FFEDD5] text-[#EA580C] flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface">Manufacturer Disclosure</span>
+<span class="font-badge text-badge text-[#9A3412] uppercase">No Record</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">
+            No published Certificate of Analysis (CoA) or consumer portal inquiry clarifying whether glycerol fatty acids are plant-synthesized.
+          </p>
+</div>
+</div>
+<!-- Evidence Confidence Footer -->
+<div class="mt-2 pt-3 bg-surface-container-low rounded-lg p-space-md flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-micro text-micro text-secondary uppercase font-semibold">Evidence Confidence</span>
+<span class="font-caption text-caption text-primary font-semibold">High (Unstated Origin)</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 85%;"></div>
+</div>
+<div class="flex items-center justify-between mt-1 text-secondary font-micro text-micro">
+<span>Last automated audit: 2 Oct 2026</span>
+<span>Hash: 9f0a...d1</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Photographic Evidence Card (Radical Transparency) -->
+<div class="px-gutter mt-6">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">photo_camera</span>
+<h4 class="font-title-md text-title-md text-on-surface">Package Photo Evidence</h4>
+</div>
+<span class="font-badge text-badge px-2 py-0.5 rounded-full bg-surface-container text-secondary">Batch A204</span>
+</div>
+<div class="relative w-full h-44 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Macro photography of food product packaging ingredient list showing the text Emulsifier 471 highlighted under neutral daylight, clean uncompressed label view showing sharp typography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe_WVkuvTW-vdZZFsShrNn838T0e1pUWfZ62fIHwTWUNmy20jRkUIZEc6pH-c3_YZFCFe4cI4Z5HBDVMKfJPCgmQHUWxsEBNUFtVovW5M5rlmFrRJpQK93tHYF7KK5LsknRieHuDf5bDIyfNzWY9ZbHhylPzPvZgcCBXqGmbPkFCnYNdsEHwNYFJ0eBXeXyT6sZmJ3ORe3tT7EyXL5LjabBwfqNu3mDN2IXRnIk8NjWzr2RpH02Dx4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3">
+<p class="text-white font-micro text-micro">Direct package scan captured via client optics (High Resolution)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Deep Trace Bottom Sheet / Modal (E471 Breakdown) -->
+<div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex-col justify-end" id="deep-trace-modal">
+<div class="w-full bg-surface-container-lowest rounded-t-2xl p-space-lg shadow-2xl flex flex-col max-h-[751px] overflow-y-auto">
+<div class="w-12 h-1.5 bg-surface-container-highest rounded-full self-center mb-4"></div>
+<div class="flex items-start justify-between">
+<div>
+<span class="font-badge text-badge px-2 py-0.5 rounded-full bg-[#FFEDD5] text-[#9A3412] uppercase">Deep Trace Dossier</span>
+<h3 class="font-display-md text-display-md text-on-surface mt-1">E471 Biochemical Path</h3>
+<p class="font-caption text-caption text-secondary">Mono- and diglycerides of fatty acids</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface" onclick="toggleTraceModal()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="mt-4 p-space-md rounded-xl bg-surface-container-low flex flex-col gap-3">
+<h4 class="font-title-md text-title-md text-on-surface">Origin Ambiguity Analysis</h4>
+<p class="font-body-sm text-body-sm text-secondary leading-relaxed">
+          E471 acts as a surfactant stabilizing water-fat mixtures. In commercial processing, it is synthesized via transesterification of glycerol with triglycerides. These triglycerides originate from:
+        </p>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<div class="bg-surface-container-lowest p-2.5 rounded-lg flex flex-col gap-1">
+<span class="font-caption text-caption text-tertiary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">eco</span>
+              Route A: Plant
+            </span>
+<span class="font-micro text-micro text-secondary">Palm oil, sunflower, or soybean oil. Cost: Standard.</span>
+</div>
+<div class="bg-surface-container-lowest p-2.5 rounded-lg flex flex-col gap-1">
+<span class="font-caption text-caption text-[#9A3412] font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">pets</span>
+              Route B: Animal
+            </span>
+<span class="font-micro text-micro text-secondary">Rendered bovine tallow or porcine lard. Cost: Low in certain markets.</span>
+</div>
+</div>
+<div class="mt-2 p-2.5 rounded-lg bg-[#FFF7ED] text-[#9A3412] font-caption text-caption">
+<strong>Why flagged?</strong> Because manufacturer package labeling excludes "Vegetable origin", dietary certainty cannot be verified mathematically.
+        </div>
+</div>
+<div class="mt-4 flex flex-col gap-2">
+<button class="w-full h-12 rounded-lg bg-primary text-on-primary font-caption text-caption flex items-center justify-center gap-2 active:scale-[0.99] transition-all" onclick="submitCommunityInquiry()" type="button">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>Crowdsource Brand Inquiry</span>
+</button>
+<button class="w-full h-10 rounded-lg text-secondary font-caption text-caption flex items-center justify-center hover:bg-surface-container-low" onclick="toggleTraceModal()" type="button">
+          Close Dossier
+        </button>
+</div>
+</div>
+</div>
+<!-- Toast Notification -->
+<div class="fixed bottom-6 inset-x-6 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-lg flex items-center justify-between opacity-0 pointer-events-none transition-all duration-300" id="toast">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed text-[20px]">task_alt</span>
+<span class="font-caption text-caption" id="toast-message">Inquiry queued for batch submission</span>
+</div>
+</div>
+<script>
+    function toggleTraceModal() {
+      const modal = document.getElementById('deep-trace-modal');
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function scrollToEvidence() {
+      const target = document.getElementById('evidence-section');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function handleVerificationRequest(btn) {
+      const textSpan = document.getElementById('btn-request-text');
+      btn.disabled = true;
+      textSpan.textContent = "Dispatched to Brand Registry...";
+      showToast("Verification request sent to Britannia support");
+      setTimeout(() => {
+        textSpan.textContent = "Verification Pending (Submitted)";
+      }, 1200);
+    }
+
+    function submitCommunityInquiry() {
+      toggleTraceModal();
+      showToast("Community inquiry vote recorded for batch audit");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const msgElem = document.getElementById('toast-message');
+      msgElem.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+  </script>
+</div></main></body></html>
