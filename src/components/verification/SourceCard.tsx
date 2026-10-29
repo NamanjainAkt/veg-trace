@@ -26,14 +26,14 @@ export const SourceCard: React.FC<SourceCardProps> = ({
   const getIcon = () => {
     switch (originType) {
       case 'plant':
-        return <Sprout size={20} color={colors.verdicts.vegetarian.color} />;
+        return <Sprout size={16} color={colors.verdicts.vegetarian.color} />;
       case 'animal':
-        return <Beef size={20} color={colors.verdicts.nonVegetarian.color} />;
+        return <Beef size={16} color={colors.verdicts.nonVegetarian.color} />;
       case 'synthetic':
-        return <FlaskConical size={20} color={colors.muted} />;
+        return <FlaskConical size={16} color={colors.muted} />;
       case 'mineral':
       default:
-        return <Mountain size={20} color={colors.muted} />;
+        return <Mountain size={16} color={colors.muted} />;
     }
   };
 
@@ -41,7 +41,7 @@ export const SourceCard: React.FC<SourceCardProps> = ({
     if (isSuspected) return colors.verdicts.sourceUndisclosed.border;
     if (originType === 'plant') return colors.verdicts.vegetarian.border;
     if (originType === 'animal') return colors.verdicts.nonVegetarian.border;
-    return colors.hairline;
+    return colors.hairlineSoft;
   };
 
   return (
@@ -82,25 +82,25 @@ export const SourceCard: React.FC<SourceCardProps> = ({
   );
 };
 
-const ICON_BADGE_SIZE = 36;
+const ICON_BADGE_SIZE = 28;
 
 const styles = StyleSheet.create({
   card: {
     borderRadius: radius.md,
     borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    padding: spacing.sm + 2,
+    marginBottom: spacing.xs,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   iconCircle: {
     width: ICON_BADGE_SIZE,
@@ -112,22 +112,28 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
   },
   likelihood: {
-    color: colors.mutedSoft,
+    color: colors.muted,
+    fontSize: 10,
     textTransform: 'capitalize',
   },
-  description: {
-    color: colors.body,
-    lineHeight: 20,
-  },
   unverifiedTag: {
-    backgroundColor: '#FFE3D3',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.xs,
     paddingVertical: 2,
-    borderRadius: radius.full,
+    borderRadius: radius.xs,
+    backgroundColor: colors.verdicts.sourceUndisclosed.border,
   },
   unverifiedTagText: {
     color: colors.verdicts.sourceUndisclosed.color,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  description: {
+    color: colors.body,
+    fontSize: 12,
+    lineHeight: 16,
   },
 });

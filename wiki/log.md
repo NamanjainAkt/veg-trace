@@ -1,5 +1,16 @@
 # Wiki Log
 
+## [2026-10-28] UX pass — warm playful minimalism + motion system (full one-pass rollout)
+- Foundation: NEW `src/design-system/motion.ts` (motion/springs/PRESS_SCALE/ROW_SCALE/staggerDelay); colors.ts warm tokens (peach* + terracotta + heroFrom/to); NEW `ui/PressableScale.tsx` + `ui/FadeSlideIn.tsx`; NEW `Illustrations.tsx` (4 SVG micro-illustrations); 9 new i18n keys in en+hi.
+- Home: LinearGradient hero (heroFrom/to, illustrated accent, privacy microcopy), sliding ink pill over 5 filter chips (shared-value X/width, onLayout-measured), "Continue your last audit" row, header staggers 0–4.
+- History: ScanFirstIllustration empty state + coral "Scan your first product" CTA; 6px quiet offline dot; PressableScale rows.
+- Scan: spring-in corner brackets, coral ping-pong beam w/ layered LinearGradient glow (reduced-motion → static), detection flash + 1× Light haptic behind 1500ms dedupe, honest stage machine idle/lens/registry (no fake steps), PressableScale controls.
+- Product/verdict: VerdictCard reveal (vegetarian-only single 1.05 pulse, springs.reveal; neutral for all other verdicts), product staggers + ingredient row stagger capped idx 7, raw-text accordion FadeInDown/FadeOutUp, verification StepConnector scaleY grow + step staggers, no-evidence card gets UnknownAdditiveIllustration (neutral tint).
+- Profile/auth: DietOption cards (peach icon chips Leaf/Milk/Sprout/Egg, ring-dot spring, terracotta selected border + peachSoft bg, selectionAsync haptic on diet change only), saved banner FadeInDown/OutDown + spring check icon, login/onboarding entrance staggers.
+- Settings pass: 3 PressableScale swaps + language haptic in settings/index, 3/5-section staggers across privacy/about.
+- Verified: `tsc --noEmit` clean, 75/75 vitest green. Not committed (awaiting user consent).
+- Left open: `common.continue` + `home.heroTitle` i18n keys would complete hero/continue-row localization; Orchestrator fixed staggerDelay literal-type bug + missing BEAM_LINE_HEIGHT const post-merge.
+
 ## [2026-10-04] Full codebase scan — 6 parallel specialists
 - Agents: mobile-developer, backend-specialist, security-auditor, performance-optimizer, test-engineer, code-archaeologist
 - Scope: `src/**` (40 ts/tsx), `app.json`, `package.json`, `VegTrace_PRD.md` Sec 1–50, `prd-real-data-and-forms.md`, `ui-scaffold-design-system.md`

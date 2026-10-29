@@ -1,15 +1,30 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Pressable,
   ActivityIndicator,
   Platform,
   Linking,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import {
   CameraView,
   useCameraPermissions,
@@ -30,6 +45,9 @@ import {
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius, shadows } from '../../design-system/spacing';
+import { motion, springs } from '../../design-system/motion';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -43,6 +61,10 @@ import { recognizeLabelText } from '../../services/ocr';
 import { Product } from '../../types';
 
 const CORNER_DIM = 24;
+const CORNER_OUT = 16;
+const BEAM_GLOW_HEIGHT = 16;
+const BEAM_LINE_HEIGHT = 2;
+const FLASH_WAVE = { on: motion.fast, off: motion.base } as const;
 const SCAN_BARCODE_TYPES: BarcodeType[] = [
   'ean13',
   'ean8',
@@ -52,6 +74,41 @@ const SCAN_BARCODE_TYPES: BarcodeType[] = [
   'code39',
   'qr',
 ];
+
+/** Animated framing bracket: springs in from CORNER_OUT px outward with an opacity ramp. */
+const FrameCorner: React.FC<{
+  positionStyle: StyleProp<ViewStyle>;
+  dirX: number;
+  dirY: number;
+}> = ({ positionStyle, dirX, dirY }) => {
+  const reduced = useReducedMotion();
+  const enter = useSharedValue(reduced ? 1 : 0);
+
+  const cornerStyle = useAnimatedStyle(() => ({
+    opacity: enter.value,
+    transform: [
+      { translateX: (1 - enter.value) * CORNER_OUT * dirX },
+      { translateY: (1 - enter.value) * CORNER_OUT * dirY },
+    ],
+  }));
+
+  useEffect(() => {
+    if (reduced) {
+      enter.value = 1;
+      return;
+    }
+    enter.value = 0;
+    enter.value = withSpring(1, springs.snap);
+    return () => cancelAnimation(enter);
+  }, [reduced]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.corner, positionStyle, cornerStyle]}
+    />
+  );
+};
 
 export default function ScanScreen() {
   const router = useRouter();
@@ -74,6 +131,8 @@ export default function ScanScreen() {
   const [scanMode, setScanMode] = useState<'ocr' | 'barcode'>('barcode');
   const [torchOn, setTorchOn] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  // Honest-progress stage: which real work the processing card is reporting.
+  const [stage, setStage] = useState<'idle' | 'lens' | 'registry'>('idle');
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
@@ -86,6 +145,53 @@ export default function ScanScreen() {
     [scanMode]
   );
 
+  const reducedMotion = useReducedMotion();
+  const containerRef = useRef<View>(null);
+  const frameRef = useRef<View>(null);
+  const [frameHeight, setFrameHeight] = useState(0);
+  const [frameRect, setFrameRect] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  // Detection flash: frame pulse on committed barcode detection (one light haptic).
+  const frameFlash = useSharedValue(0);
+  const frameFlashStyle = useAnimatedStyle(() => ({
+    opacity: frameFlash.value,
+  }));
+
+  // Scanning beam: ping-pong loop across the frame (barcode mode, idle only).
+  const beamPos = useSharedValue(0);
+  const beamStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: interpolate(
+          beamPos.value,
+          [0, 1],
+          [-frameHeight / 2 + BEAM_GLOW_HEIGHT / 2, frameHeight / 2 - BEAM_GLOW_HEIGHT / 2]
+        ),
+      },
+    ],
+  }));
+
+  useEffect(() => {
+    cancelAnimation(beamPos);
+    beamPos.value = 0;
+    if (!reducedMotion && scanMode === 'barcode' && !isProcessing) {
+      beamPos.value = withRepeat(
+        withTiming(1, {
+          duration: motion.scanBeam,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        -1,
+        true
+      );
+    }
+    return () => cancelAnimation(beamPos);
+  }, [reducedMotion, scanMode, isProcessing]);
+
   // Live Optical Barcode Handler with OFF → public-web fallback
   const handleBarcodeScanned = useCallback(
     async (result: BarcodeScanningResult) => {
@@ -93,7 +199,21 @@ export default function ScanScreen() {
       if (Date.now() - lastScanAt.current < 1500) return;
       lastScanAt.current = Date.now();
 
+      // Detection commit: pulse the scan frame + one light haptic.
+      // The 1500ms/dedup guards above ensure this fires once per code.
+      if (!reducedMotion) {
+        frameFlash.value = 0;
+        frameFlash.value = withSequence(
+          withTiming(1, { duration: FLASH_WAVE.on }),
+          withTiming(0, { duration: FLASH_WAVE.off })
+        );
+      }
+      if (Platform.OS !== 'web') {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
       setIsProcessing(true);
+      setStage('registry');
       setScannedBarcode(result.data);
       setScanError(null);
 
@@ -107,21 +227,24 @@ export default function ScanScreen() {
         }
         setScanError(t('scan.notFound', { code: result.data }));
         setScannedBarcode(null);
+        setStage('idle');
         setIsProcessing(false);
       } catch (err) {
         if (__DEV__) console.warn('Barcode lookup failed:', err);
         setScanError(t('scan.networkError'));
         setScannedBarcode(null);
+        setStage('idle');
         setIsProcessing(false);
       }
     },
-    [isProcessing, scannedBarcode, router, t]
+    [isProcessing, scannedBarcode, router, t, reducedMotion, frameFlash]
   );
 
   // Capture button (Label OCR mode): on-device text recognition first,
   // manual label entry as the fallback.
   const handleCapture = async () => {
     setIsProcessing(true);
+    setStage('lens');
     setScanError(null);
     let resolved = false;
     try {
@@ -132,6 +255,7 @@ export default function ScanScreen() {
         });
         const ocr = await recognizeLabelText(photo?.uri ?? '');
         if (ocr) {
+          setStage('registry');
           const prefs = usePreferencesStore.getState().prefs;
           const evaluation = evaluateIngredients(ocr.text, prefs);
           const product: Product = {
@@ -160,6 +284,7 @@ export default function ScanScreen() {
       setScanError(t('scan.captureFailed'));
     } finally {
       setIsProcessing(false);
+      setStage('idle');
       if (!resolved) setShowAnalyzerModal(true);
     }
   };
@@ -180,7 +305,7 @@ export default function ScanScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <View style={styles.permissionCard}>
+        <FadeSlideIn style={styles.permissionCard}>
           <View style={styles.permissionIconCircle}>
             <CameraIcon size={36} color={colors.primary} />
           </View>
@@ -231,7 +356,7 @@ export default function ScanScreen() {
               style={{ flex: 1 }}
             />
           </View>
-        </View>
+        </FadeSlideIn>
 
         {/* Manual Barcode Modal */}
         <Modal
@@ -264,7 +389,7 @@ export default function ScanScreen() {
 
   // 2. Real Live Camera View
   return (
-    <View style={styles.container}>
+    <View ref={containerRef} style={styles.container}>
       <CameraView
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -274,101 +399,161 @@ export default function ScanScreen() {
         onBarcodeScanned={scanMode === 'barcode' && !isProcessing ? handleBarcodeScanned : undefined}
       />
 
+      {/* Detection flash overlay: sits exactly over the measured scan frame */}
+      {frameRect && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.frameFlash,
+            {
+              left: frameRect.x,
+              top: frameRect.y,
+              width: frameRect.width,
+              height: frameRect.height,
+            },
+            reducedMotion ? { opacity: 0 } : frameFlashStyle,
+          ]}
+        />
+      )}
+
       {/* Top Floating Controls */}
       <View style={styles.topControls}>
         <View style={styles.modeToggle}>
-          <Pressable
+          <PressableScale
             onPress={() => {
               setScanMode('barcode');
               setScanError(null);
             }}
-            style={[
-              styles.modeBtn,
-              scanMode === 'barcode' && styles.modeBtnActive,
-            ]}
+            scaleTo={0.96}
             accessibilityRole="button"
             accessibilityLabel={t('scan.barcode')}
             accessibilityState={{ selected: scanMode === 'barcode' }}
           >
-            <BarcodeIcon
-              size={16}
-              color={scanMode === 'barcode' ? colors.white : colors.mutedSoft}
-            />
-            <Text
-              style={[
-                typography.micro,
-                { color: scanMode === 'barcode' ? colors.white : colors.mutedSoft },
-              ]}
-            >
-              {t('scan.barcode')}
-            </Text>
-          </Pressable>
+            <View style={[styles.modeBtn, scanMode === 'barcode' && styles.modeBtnActive]}>
+              <BarcodeIcon
+                size={16}
+                color={scanMode === 'barcode' ? colors.white : colors.mutedSoft}
+              />
+              <Text
+                style={[
+                  typography.micro,
+                  { color: scanMode === 'barcode' ? colors.white : colors.mutedSoft },
+                ]}
+              >
+                {t('scan.barcode')}
+              </Text>
+            </View>
+          </PressableScale>
 
-          <Pressable
+          <PressableScale
             onPress={() => {
               setScanMode('ocr');
               setScanError(null);
             }}
-            style={[
-              styles.modeBtn,
-              scanMode === 'ocr' && styles.modeBtnActive,
-            ]}
+            scaleTo={0.96}
             accessibilityRole="button"
             accessibilityLabel={t('scan.ingredientLabel')}
             accessibilityState={{ selected: scanMode === 'ocr' }}
           >
-            <CameraIcon
-              size={16}
-              color={scanMode === 'ocr' ? colors.white : colors.mutedSoft}
-            />
-            <Text
-              style={[
-                typography.micro,
-                { color: scanMode === 'ocr' ? colors.white : colors.mutedSoft },
-              ]}
-            >
-              {t('scan.ingredientLabel')}
-            </Text>
-          </Pressable>
+            <View style={[styles.modeBtn, scanMode === 'ocr' && styles.modeBtnActive]}>
+              <CameraIcon
+                size={16}
+                color={scanMode === 'ocr' ? colors.white : colors.mutedSoft}
+              />
+              <Text
+                style={[
+                  typography.micro,
+                  { color: scanMode === 'ocr' ? colors.white : colors.mutedSoft },
+                ]}
+              >
+                {t('scan.ingredientLabel')}
+              </Text>
+            </View>
+          </PressableScale>
         </View>
 
-        <Pressable
+        <PressableScale
           onPress={() => setTorchOn(!torchOn)}
-          style={[
-            styles.torchBtn,
-            { backgroundColor: torchOn ? colors.primary : 'rgba(0,0,0,0.6)' },
-          ]}
+          scaleTo={0.96}
           accessibilityLabel={t('scan.toggleTorch')}
         >
-          <Zap size={20} color={colors.white} />
-        </Pressable>
+          <View
+            style={[
+              styles.torchBtn,
+              { backgroundColor: torchOn ? colors.primary : 'rgba(0,0,0,0.6)' },
+            ]}
+          >
+            <Zap size={20} color={colors.white} />
+          </View>
+        </PressableScale>
       </View>
 
       {/* Framing Guides Overlay */}
       <View style={styles.frameContainer}>
         {isProcessing ? (
-          <View style={styles.processingCard}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[typography.titleSm, styles.processingText]}>
-              {scannedBarcode
-                ? t('scan.identifiedBarcode', { code: scannedBarcode })
-                : t('scan.evaluating')}
-            </Text>
-            <Text style={[typography.captionSm, { color: colors.muted }]}>
-              {t('scan.checkingSources')}
-            </Text>
-          </View>
+          <FadeSlideIn style={styles.processingCard}>
+            <View style={styles.processingStageRow}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={[typography.titleSm, styles.processingText]}>
+                {stage === 'registry'
+                  ? scannedBarcode
+                    ? t('scan.identifiedBarcode', { code: scannedBarcode })
+                    : t('scan.stepRegistry')
+                  : t('scan.stepReading')}
+              </Text>
+            </View>
+            {stage === 'registry' && (
+              <Text style={[typography.captionSm, styles.processingSub]}>
+                {t('scan.stepRegistry')}
+              </Text>
+            )}
+          </FadeSlideIn>
         ) : (
           <View
+            ref={frameRef}
             style={[
               styles.targetFrame,
               scanMode === 'barcode' && styles.barcodeFrame,
             ]}
+            onLayout={({ nativeEvent }) => {
+              setFrameHeight(nativeEvent.layout.height);
+              const layout = frameRef.current;
+              const container = containerRef.current;
+              if (!layout || !container) return;
+              layout.measureInWindow((fx, fy, rectW, rectH) => {
+                container.measureInWindow((cx, cy) => {
+                  if (rectW > 0 && rectH > 0) {
+                    setFrameRect({ x: fx - cx, y: fy - cy, width: rectW, height: rectH });
+                  }
+                });
+              });
+            }}
           >
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
+            <FrameCorner positionStyle={styles.topLeft} dirX={-1} dirY={-1} />
+            <FrameCorner positionStyle={styles.topRight} dirX={1} dirY={-1} />
+            <FrameCorner positionStyle={styles.bottomLeft} dirX={-1} dirY={1} />
+            <FrameCorner positionStyle={styles.bottomRight} dirX={1} dirY={1} />
+
+            {scanMode === 'barcode' && (
+              <Animated.View
+                pointerEvents="none"
+                style={reducedMotion ? styles.scanBeamStatic : [styles.scanBeam, beamStyle]}
+              >
+                <LinearGradient
+                  style={styles.beamGlowV}
+                  colors={['rgba(255,56,92,0)', 'rgba(255,56,92,0.25)', 'rgba(255,56,92,0)']}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                />
+                <LinearGradient
+                  style={styles.beamGlowH}
+                  colors={['rgba(255,56,92,0)', 'rgba(255,56,92,0.22)', 'rgba(255,56,92,0)']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                />
+                <View style={styles.beamLine} />
+              </Animated.View>
+            )}
 
             <View style={styles.reticleCenter}>
               <Text style={styles.reticleGuideText}>
@@ -399,29 +584,30 @@ export default function ScanScreen() {
 
       {/* Bottom Shutter & Controls */}
       <View style={styles.bottomBar}>
-        <Pressable
+        <PressableScale
           onPress={() => setShowBarcodeModal(true)}
-          style={styles.bottomIconBtn}
+          scaleTo={0.96}
           accessibilityLabel={t('scan.enterBarcode')}
         >
-          <BarcodeIcon size={22} color={colors.white} />
-        </Pressable>
+          <View style={styles.bottomIconBtn}>
+            <BarcodeIcon size={22} color={colors.white} />
+          </View>
+        </PressableScale>
 
         {scanMode === 'ocr' ? (
-          <Pressable
+          <PressableScale
             onPress={handleCapture}
             disabled={isProcessing}
-            style={({ pressed }) => [
-              styles.shutterBtn,
-              { transform: [{ scale: pressed ? 0.93 : 1 }] },
-            ]}
+            scaleTo={0.93}
             accessibilityRole="button"
             accessibilityLabel={t('scan.ingredientLabel')}
           >
-            <View style={styles.shutterInner}>
-              <Scan size={30} color={colors.white} />
+            <View style={styles.shutterBtn}>
+              <View style={styles.shutterInner}>
+                <Scan size={30} color={colors.white} />
+              </View>
             </View>
-          </Pressable>
+          </PressableScale>
         ) : (
           <View style={styles.barcodeLiveIndicator}>
             <View style={styles.pulseDot} />
@@ -431,13 +617,15 @@ export default function ScanScreen() {
           </View>
         )}
 
-        <Pressable
+        <PressableScale
           onPress={() => setShowAnalyzerModal(true)}
-          style={styles.bottomIconBtn}
+          scaleTo={0.96}
           accessibilityLabel={t('scan.pasteIngredients')}
         >
-          <FileText size={20} color={colors.white} />
-        </Pressable>
+          <View style={styles.bottomIconBtn}>
+            <FileText size={20} color={colors.white} />
+          </View>
+        </PressableScale>
       </View>
 
       {/* Manual Barcode Modal */}
@@ -483,73 +671,80 @@ const styles = StyleSheet.create({
   },
   permissionCard: {
     backgroundColor: colors.canvas,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
+    borderRadius: radius.md,
+    padding: spacing.lg,
     alignItems: 'center',
-    maxWidth: 380,
+    maxWidth: 360,
     width: '100%',
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
   },
   permissionIconCircle: {
-    width: 72,
-    height: 72,
+    width: 52,
+    height: 52,
     borderRadius: radius.full,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   permissionTitle: {
     color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   permissionSubtitle: {
     color: colors.muted,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.lg,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: spacing.md,
   },
   privacyGuarantee: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
     backgroundColor: colors.surfaceSoft,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
     borderRadius: radius.full,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   privacyGuaranteeText: {
     color: colors.body,
+    fontSize: 11,
   },
   permissionBtn: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   fallbackDivider: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.hairline,
+    backgroundColor: colors.hairlineSoft,
   },
   dividerText: {
     color: colors.mutedSoft,
-    marginHorizontal: spacing.md,
+    fontSize: 11,
+    marginHorizontal: spacing.sm,
   },
   manualOptionsRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.xs,
     width: '100%',
   },
   topControls: {
     position: 'absolute',
-    top: spacing.xl,
-    left: spacing.lg,
-    right: spacing.lg,
+    top: spacing.lg,
+    left: spacing.md,
+    right: spacing.md,
     zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -559,23 +754,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'rgba(0,0,0,0.7)',
     borderRadius: radius.full,
-    padding: 3,
+    padding: 2,
   },
   modeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    minHeight: 48,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 6,
+    minHeight: 34,
     borderRadius: radius.full,
   },
   modeBtnActive: {
     backgroundColor: colors.primary,
   },
   torchBtn: {
-    width: 48,
-    height: 48,
+    width: 38,
+    height: 38,
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -634,6 +829,53 @@ const styles = StyleSheet.create({
     borderRightWidth: 3,
     borderBottomRightRadius: radius.md,
   },
+  frameFlash: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: radius.lg,
+    opacity: 0,
+  },
+  scanBeam: {
+    position: 'absolute',
+    left: -1,
+    right: -1,
+    height: BEAM_GLOW_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanBeamStatic: {
+    position: 'absolute',
+    left: -1,
+    right: -1,
+    top: '50%',
+    height: BEAM_GLOW_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ translateY: -BEAM_GLOW_HEIGHT / 2 }],
+  },
+  beamGlowV: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: radius.full,
+  },
+  beamGlowH: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: radius.full,
+  },
+  beamLine: {
+    width: '100%',
+    height: BEAM_LINE_HEIGHT,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(255,56,92,0.6)',
+  },
   reticleCenter: {
     backgroundColor: 'rgba(0,0,0,0.4)',
     paddingHorizontal: spacing.md,
@@ -652,10 +894,19 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: spacing.md,
   },
+  processingStageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   processingText: {
     color: colors.ink,
-    marginTop: spacing.md,
-    marginBottom: spacing.xxs,
+    flex: 1,
+  },
+  processingSub: {
+    color: colors.muted,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
   errorBanner: {
     flexDirection: 'row',
@@ -703,33 +954,33 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     position: 'absolute',
-    bottom: spacing.xl,
-    left: spacing.xl,
-    right: spacing.xl,
+    bottom: spacing.lg,
+    left: spacing.lg,
+    right: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   bottomIconBtn: {
-    width: 48,
-    height: 48,
+    width: 42,
+    height: 42,
     borderRadius: radius.full,
     backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   shutterBtn: {
-    width: 76,
-    height: 76,
+    width: 66,
+    height: 66,
     borderRadius: radius.full,
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   shutterInner: {
-    width: 60,
-    height: 60,
+    width: 52,
+    height: 52,
     borderRadius: radius.full,
     backgroundColor: colors.primary,
     alignItems: 'center',
@@ -738,10 +989,10 @@ const styles = StyleSheet.create({
   barcodeLiveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
     borderRadius: radius.full,
   },
   pulseDot: {

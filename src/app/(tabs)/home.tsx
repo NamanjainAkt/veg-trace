@@ -4,11 +4,18 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Pressable,
   ActivityIndicator,
+  LayoutChangeEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   Scan,
   Filter,
@@ -18,14 +25,17 @@ import {
   FlaskConical,
   ArrowRight,
   ShieldCheck,
-  Search,
 } from 'lucide-react-native';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius, shadows } from '../../design-system/spacing';
+import { staggerDelay } from '../../design-system/motion';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
+import { ScanHeroIllustration } from '../../components/illustrations/Illustrations';
 import { ProductCard } from '../../components/product/ProductCard';
 import { ManualBarcodeForm } from '../../components/forms/ManualBarcodeForm';
 import { RawIngredientAnalyzerForm } from '../../components/forms/RawIngredientAnalyzerForm';
@@ -38,6 +48,8 @@ import { Product } from '../../types';
 
 type FilterId = 'all' | 'undisclosed' | 'dependent' | 'vegetarian' | 'nonveg';
 const CATEGORY_CHIPS: FilterId[] = ['all', 'undisclosed', 'dependent', 'vegetarian', 'nonveg'];
+const CHIP_HEIGHT = 34;
+const CHIP_TIMING = { duration: 200 };
 
 function verdictForFilter(filter: FilterId): Product['verdict'] | null {
   switch (filter) {
@@ -53,7 +65,6 @@ function verdictForFilter(filter: FilterId): Product['verdict'] | null {
       return null;
   }
 }
-const ARROW_DIM = 32;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -71,6 +82,31 @@ export default function HomeScreen() {
   // Modal forms
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [showAnalyzerModal, setShowAnalyzerModal] = useState(false);
+
+  // Sliding filter pill: measured chip positions + animated X/width
+  const chipLayouts = useRef<Partial<Record<FilterId, { x: number; width: number }>>>({});
+  const pillX = useSharedValue(0);
+  const pillW = useSharedValue(0);
+  const pillAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: pillX.value }],
+    width: pillW.value,
+  }));
+
+  const movePill = useCallback((id: FilterId, animate: boolean) => {
+    const layout = chipLayouts.current[id];
+    if (!layout) return;
+    if (animate) {
+      pillX.value = withTiming(layout.x, CHIP_TIMING);
+      pillW.value = withTiming(layout.width, CHIP_TIMING);
+    } else {
+      pillX.value = layout.x;
+      pillW.value = layout.width;
+    }
+  }, [pillX, pillW]);
+
+  useEffect(() => {
+    movePill(selectedFilter, true);
+  }, [selectedFilter, movePill]);
 
   // Load persistent history on mount and when returning
   useEffect(() => {
@@ -133,173 +169,265 @@ export default function HomeScreen() {
     [handleProductPress]
   );
 
+  const showContinueAudit = searchQuery.trim() === '' && productsList.length > 0;
+
   const renderHeader = useCallback(
     () => (
-    <View style={styles.headerContainer}>
-      {/* Search Header */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder={t('home.searchPlaceholder')}
-        style={styles.searchBar}
-      />
-
-      {/* Additive Match Card if user searches E-number */}
-      {matchedAdditive && (
-        <Pressable
-          onPress={() => router.push(`/ingredient/${matchedAdditive.code}` as any)}
-          style={[styles.additiveMatchCard, shadows.card]}
-        >
-          <View style={styles.additiveTopTag}>
-            <View style={styles.additiveTagLeft}>
-              <FlaskConical size={14} color={colors.primary} />
-              <Text style={[typography.micro, styles.additiveTagText]}>
-                {t('home.registryMatch')}
-              </Text>
-            </View>
-            <Badge
-              label={getVerdictStrings(language)[matchedAdditive.defaultVerdict].label}
-              status={matchedAdditive.defaultVerdict}
-              size="sm"
-            />
-          </View>
-
-          <View style={styles.additiveMainRow}>
-            <View style={styles.additiveTextCol}>
-              <Text style={[typography.titleMd, styles.additiveCode]}>
-                {matchedAdditive.code} • INS {matchedAdditive.insNumber}
-              </Text>
-              <Text style={[typography.bodySm, styles.additiveName]} numberOfLines={1}>
-                {matchedAdditive.name}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={[typography.captionSm, styles.additiveDesc]} numberOfLines={2}>
-            {matchedAdditive.description}
-          </Text>
-
-          <View style={styles.additiveFooter}>
-            <Text style={[typography.captionSm, styles.inspectLink]}>
-              {t('home.inspectDossier')}
-            </Text>
-            <ArrowRight size={14} color={colors.primary} />
-          </View>
-        </Pressable>
-      )}
-
-      {/* Hero Scan Banner */}
-      <Pressable
-        onPress={() => router.push('/scan' as any)}
-        accessibilityRole="button"
-        accessibilityLabel={t('home.scanTitle')}
-        style={({ pressed }) => [
-          styles.scanBanner,
-          shadows.card,
-          { transform: [{ scale: pressed ? 0.98 : 1 }] },
-        ]}
-      >
-        <View style={styles.scanBannerContent}>
-          <View style={styles.scanIconBubble}>
-            <Scan size={26} color={colors.white} />
-          </View>
-          <View style={styles.scanTextWrapper}>
-            <Text style={[typography.titleMd, styles.scanTitle]}>
-              {t('home.scanTitle')}
-            </Text>
-            <Text style={[typography.captionSm, styles.scanSubtitle]}>
-              {t('home.scanSubtitle')}
-            </Text>
-          </View>
-          <View style={styles.scanActionPill}>
-            <ArrowRight size={16} color={colors.white} />
-          </View>
-        </View>
-      </Pressable>
-
-      {/* Manual Input Action Buttons */}
-      <View style={styles.actionShortcutsRow}>
-        <Pressable
-          onPress={() => setShowBarcodeModal(true)}
-          style={[styles.shortcutBtn, shadows.subtle]}
-        >
-          <Barcode size={18} color={colors.ink} />
-          <Text style={[typography.captionSm, styles.shortcutLabel]}>
-            {t('home.enterBarcode')}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setShowAnalyzerModal(true)}
-          style={[styles.shortcutBtn, shadows.subtle]}
-        >
-          <FileText size={18} color={colors.ink} />
-          <Text style={[typography.captionSm, styles.shortcutLabel]}>
-            {t('home.pasteLabel')}
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* Category / Verdict Filters */}
-      <View style={styles.filterSection}>
-        <View style={styles.filterHeader}>
-          <View style={styles.filterTitleRow}>
-            <Filter size={15} color={colors.ink} />
-            <Text style={[typography.titleSm, styles.filterTitle]}>
-              {searchQuery.trim().length > 1
-                ? t('home.offResults')
-                : t('home.audited')}
-            </Text>
-          </View>
-          {isSearchingOnline ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Badge label={`${displayItems.length}`} status="neutral" size="sm" />
-          )}
-        </View>
-
-        <FlatList
-          data={CATEGORY_CHIPS}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item}
-          contentContainerStyle={styles.chipsContainer}
-          windowSize={5}
-          initialNumToRender={6}
-          renderItem={({ item }) => {
-            const isSelected = selectedFilter === item;
-            return (
-              <Pressable
-                onPress={() => setSelectedFilter(item)}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: isSelected }}
-                accessibilityLabel={t(`home.filters.${item}`)}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: isSelected ? colors.ink : colors.surfaceStrong,
-                    borderColor: isSelected ? colors.ink : colors.hairline,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    typography.micro,
-                    {
-                      color: isSelected ? colors.white : colors.body,
-                      fontWeight: isSelected ? '600' : '400',
-                    },
-                  ]}
-                >
-                  {t(`home.filters.${item}`)}
-                </Text>
-              </Pressable>
-            );
-          }}
+      <View style={styles.headerContainer}>
+        {/* Search Header */}
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder={t('home.searchPlaceholder')}
+          style={styles.searchBar}
         />
+
+        {/* Additive Match Card if user searches E-number */}
+        {matchedAdditive && (
+          <FadeSlideIn delay={staggerDelay(0)}>
+            <PressableScale
+              onPress={() => router.push(`/ingredient/${matchedAdditive.code}` as any)}
+              scaleTo={0.97}
+              haptic
+              accessibilityRole="button"
+              accessibilityLabel={t('home.inspectDossier')}
+            >
+              <View style={[styles.additiveMatchCard, shadows.subtle]}>
+                <View style={styles.additiveTopTag}>
+                  <View style={styles.additiveTagLeft}>
+                    <FlaskConical size={13} color={colors.primary} />
+                    <Text style={[typography.micro, styles.additiveTagText]}>
+                      {t('home.registryMatch')}
+                    </Text>
+                  </View>
+                  <Badge
+                    label={getVerdictStrings(language)[matchedAdditive.defaultVerdict].label}
+                    status={matchedAdditive.defaultVerdict}
+                    size="sm"
+                  />
+                </View>
+
+                <View style={styles.additiveMainRow}>
+                  <View style={styles.additiveTextCol}>
+                    <Text style={[typography.titleSm, styles.additiveCode]}>
+                      {matchedAdditive.code} • INS {matchedAdditive.insNumber}
+                    </Text>
+                    <Text style={[typography.captionSm, styles.additiveName]} numberOfLines={1}>
+                      {matchedAdditive.name}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={[typography.captionSm, styles.additiveDesc]} numberOfLines={2}>
+                  {matchedAdditive.description}
+                </Text>
+
+                <View style={styles.additiveFooter}>
+                  <Text style={[typography.micro, styles.inspectLink]}>
+                    {t('home.inspectDossier')}
+                  </Text>
+                  <ArrowRight size={13} color={colors.primary} />
+                </View>
+              </View>
+            </PressableScale>
+          </FadeSlideIn>
+        )}
+
+        {/* Hero Scan Banner */}
+        <FadeSlideIn delay={staggerDelay(1)} style={styles.heroWrapper}>
+          <PressableScale
+            onPress={() => router.push('/scan' as any)}
+            scaleTo={0.985}
+            haptic
+            accessibilityRole="button"
+            accessibilityLabel={t('home.scanTitle')}
+          >
+            <View style={[styles.heroShell, shadows.subtle]}>
+              <LinearGradient
+                colors={[colors.heroFrom, colors.heroTo]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroGradient}
+              >
+                <View style={styles.heroIllustration} pointerEvents="none">
+                  <ScanHeroIllustration size={56} />
+                </View>
+
+                <View style={styles.heroContent}>
+                  <View style={styles.heroLeft}>
+                    <Text style={[typography.micro, styles.heroEyebrow]}>
+                      {t('home.readyToTrace')}
+                    </Text>
+                    <Text style={[typography.titleSm, styles.heroTitle]}>
+                      {t('home.scanTitle')}
+                    </Text>
+                    <Text style={[typography.captionSm, styles.heroSubtitle]} numberOfLines={2}>
+                      {t('home.scanSubtitle')}
+                    </Text>
+                    <View style={styles.heroPrivacyRow}>
+                      <ShieldCheck size={12} color={colors.peach} />
+                      <Text style={[typography.micro, styles.heroPrivacyText]}>
+                        {t('home.heroPrivacy')}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.heroScanCol}>
+                    <View style={styles.heroScanCircle}>
+                      <Scan size={20} color={colors.white} />
+                    </View>
+                    <Text style={[typography.micro, styles.heroScanLabel]}>
+                      {t('home.heroScanCta')}
+                    </Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
+          </PressableScale>
+        </FadeSlideIn>
+
+        {/* Manual Input Action Buttons */}
+        <FadeSlideIn delay={staggerDelay(2)} style={styles.actionShortcutsRow}>
+          <PressableScale
+            onPress={() => setShowBarcodeModal(true)}
+            scaleTo={0.97}
+            haptic
+            accessibilityRole="button"
+            accessibilityLabel={t('home.enterBarcode')}
+            style={styles.shortcutSlot}
+          >
+            <View style={[styles.shortcutBtn, shadows.subtle]}>
+              <Barcode size={16} color={colors.ink} />
+              <Text style={[typography.captionSm, styles.shortcutLabel]}>
+                {t('home.enterBarcode')}
+              </Text>
+            </View>
+          </PressableScale>
+
+          <PressableScale
+            onPress={() => setShowAnalyzerModal(true)}
+            scaleTo={0.97}
+            haptic
+            accessibilityRole="button"
+            accessibilityLabel={t('home.pasteLabel')}
+            style={styles.shortcutSlot}
+          >
+            <View style={[styles.shortcutBtn, shadows.subtle]}>
+              <FileText size={16} color={colors.ink} />
+              <Text style={[typography.captionSm, styles.shortcutLabel]}>
+                {t('home.pasteLabel')}
+              </Text>
+            </View>
+          </PressableScale>
+        </FadeSlideIn>
+
+        {/* Continue your last audit */}
+        {showContinueAudit && (
+          <FadeSlideIn delay={staggerDelay(2)} style={styles.continueWrapper}>
+            <View style={styles.continueSection}>
+              <Text style={[typography.micro, styles.continueLabel]}>
+                {t('home.continueAudit')}
+              </Text>
+              <PressableScale
+                onPress={() => router.push(`/product/${productsList[0].id}` as any)}
+                scaleTo={0.985}
+                haptic
+                accessibilityRole="button"
+                accessibilityLabel={`${t('home.continueAudit')}: ${productsList[0].name}`}
+              >
+                <View style={[styles.continueCard, shadows.subtle]}>
+                  <View style={styles.continueIconWrap}>
+                    <Barcode size={15} color={colors.ink} />
+                  </View>
+                  <Text style={[typography.captionSm, styles.continueName]} numberOfLines={1}>
+                    {productsList[0].name}
+                  </Text>
+                  <Badge
+                    label={getVerdictStrings(language)[productsList[0].verdict].label}
+                    status={productsList[0].verdict}
+                    size="sm"
+                    style={{ flexShrink: 0 }}
+                  />
+                  <ChevronRight size={14} color={colors.muted} />
+                </View>
+              </PressableScale>
+            </View>
+          </FadeSlideIn>
+        )}
+
+        {/* Category / Verdict Filters */}
+        <FadeSlideIn delay={staggerDelay(3)} style={styles.filterSection}>
+          <View style={styles.filterHeader}>
+            <View style={styles.filterTitleRow}>
+              <Filter size={13} color={colors.ink} />
+              <Text style={[typography.titleSm, styles.filterTitle]}>
+                {searchQuery.trim().length > 1
+                  ? t('home.offResults')
+                  : t('home.audited')}
+              </Text>
+            </View>
+            {isSearchingOnline ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Badge label={`${displayItems.length}`} status="neutral" size="sm" />
+            )}
+          </View>
+
+          {/* Sliding-selection chip row: ink pill glides under the active chip */}
+          <View style={styles.chipTrack}>
+            <View style={styles.chipRow}>
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.chipPill, pillAnimStyle]}
+              />
+              {CATEGORY_CHIPS.map((item) => {
+                const isSelected = selectedFilter === item;
+                const handleChipPress = () => {
+                  if (item === selectedFilter) return;
+                  setSelectedFilter(item);
+                  try {
+                    void Haptics.selectionAsync();
+                  } catch {}
+                };
+                const handleChipLayout = (event: LayoutChangeEvent) => {
+                  const { x, width } = event.nativeEvent.layout;
+                  chipLayouts.current[item] = { x, width };
+                  if (item === selectedFilter) movePill(item, false);
+                };
+                return (
+                  <PressableScale
+                    key={item}
+                    onPress={handleChipPress}
+                    onLayout={handleChipLayout}
+                    scaleTo={0.985}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityLabel={t(`home.filters.${item}`)}
+                    style={styles.chipSlot}
+                  >
+                    <View style={styles.chip}>
+                      <Text
+                        style={[
+                          typography.micro,
+                          {
+                            color: isSelected ? colors.white : colors.body,
+                            fontWeight: isSelected ? '700' : '500',
+                            fontSize: 11,
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {t(`home.filters.${item}`)}
+                      </Text>
+                    </View>
+                  </PressableScale>
+                );
+              })}
+            </View>
+          </View>
+        </FadeSlideIn>
       </View>
-    </View>
-  ),
+    ),
     [
       t,
       router,
@@ -309,36 +437,42 @@ export default function HomeScreen() {
       displayItems.length,
       isSearchingOnline,
       selectedFilter,
+      productsList,
+      showContinueAudit,
+      movePill,
+      pillAnimStyle,
     ]
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={displayItems}
-        keyExtractor={(item) => item.id}
-        renderItem={renderProductItem}
-        removeClippedSubviews
-        windowSize={7}
-        maxToRenderPerBatch={10}
-        initialNumToRender={10}
-        updateCellsBatchingPeriod={50}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={[typography.titleSm, styles.emptyTitle]}>
-              {searchQuery.trim().length > 1
-                ? t('home.emptySearch', { query: searchQuery })
-                : t('home.emptyDefault')}
-            </Text>
-            <Text style={[typography.bodySm, styles.emptyText]}>
-              {t('home.emptyBody')}
-            </Text>
-          </View>
-        }
-      />
+      <FadeSlideIn delay={staggerDelay(4)} style={styles.listWrap}>
+        <FlatList
+          data={displayItems}
+          keyExtractor={(item) => item.id}
+          renderItem={renderProductItem}
+          removeClippedSubviews
+          windowSize={7}
+          maxToRenderPerBatch={10}
+          initialNumToRender={10}
+          updateCellsBatchingPeriod={50}
+          ListHeaderComponent={renderHeader}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={[typography.titleSm, styles.emptyTitle]}>
+                {searchQuery.trim().length > 1
+                  ? t('home.emptySearch', { query: searchQuery })
+                  : t('home.emptyDefault')}
+              </Text>
+              <Text style={[typography.captionSm, styles.emptyText]}>
+                {t('home.emptyBody')}
+              </Text>
+            </View>
+          }
+        />
+      </FadeSlideIn>
 
       {/* Manual Barcode Modal */}
       <Modal
@@ -380,29 +514,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surfaceSoft,
   },
+  listWrap: {
+    flex: 1,
+  },
   listContent: {
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xl,
   },
   headerContainer: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.sm + 2,
+    paddingTop: spacing.xs,
   },
   searchBar: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   additiveMatchCard: {
     backgroundColor: colors.canvas,
-    borderColor: colors.hairline,
+    borderColor: colors.hairlineSoft,
     borderWidth: 1,
     borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   additiveTopTag: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   additiveTagLeft: {
     flexDirection: 'row',
@@ -412,10 +549,11 @@ const styles = StyleSheet.create({
   additiveTagText: {
     color: colors.primary,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    letterSpacing: 0.4,
   },
   additiveMainRow: {
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   additiveTextCol: {
     flex: 1,
@@ -423,101 +561,180 @@ const styles = StyleSheet.create({
   additiveCode: {
     color: colors.ink,
     fontWeight: '700',
+    fontSize: 14,
   },
   additiveName: {
     color: colors.body,
-    marginTop: 2,
+    fontSize: 12,
+    marginTop: 1,
   },
   additiveDesc: {
     color: colors.muted,
-    lineHeight: 18,
-    marginBottom: spacing.xs,
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: spacing.xxs,
   },
   additiveFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.xxs + 2,
     borderTopWidth: 1,
     borderTopColor: colors.hairlineSoft,
   },
   inspectLink: {
     color: colors.primary,
     fontWeight: '600',
+    fontSize: 11,
+  },
+  heroWrapper: {
+    marginBottom: spacing.xs,
+  },
+  heroShell: {
+    borderRadius: radius.md,
+    backgroundColor: colors.heroFrom,
+    overflow: 'hidden',
+  },
+  heroGradient: {
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  heroIllustration: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: spacing.xs,
+    opacity: 0.2,
+  },
+  heroContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  heroLeft: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: spacing.sm,
+  },
+  heroEyebrow: {
+    color: colors.peach,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontSize: 10,
+    marginBottom: 2,
+  },
+  heroTitle: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  heroSubtitle: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 2,
+  },
+  heroPrivacyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: spacing.xxs,
+  },
+  heroPrivacyText: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
+  },
+  heroScanCol: {
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  heroScanCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroScanLabel: {
+    color: colors.white,
+    marginTop: 3,
+    fontSize: 10,
+    fontWeight: '600',
   },
   actionShortcutsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  shortcutSlot: {
+    flex: 1,
   },
   shortcutBtn: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
     backgroundColor: colors.canvas,
-    borderColor: colors.hairline,
+    borderColor: colors.hairlineSoft,
     borderWidth: 1,
     borderRadius: radius.md,
-    minHeight: 48,
+    height: 40,
     paddingHorizontal: spacing.sm,
   },
   shortcutLabel: {
     color: colors.ink,
-    fontWeight: '500',
+    fontWeight: '600',
+    fontSize: 12,
   },
-  scanBanner: {
-    backgroundColor: colors.ink,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+  continueWrapper: {
+    marginBottom: spacing.xs,
   },
-  scanBannerContent: {
+  continueSection: {
+    borderTopWidth: 1,
+    borderTopColor: colors.hairlineSoft,
+    paddingTop: spacing.xs,
+  },
+  continueLabel: {
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontSize: 10,
+    marginBottom: spacing.xxs,
+  },
+  continueCard: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  scanIconBubble: {
-    width: 44,
-    height: 44,
+    gap: spacing.xs,
+    backgroundColor: colors.canvas,
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    padding: spacing.xs + 2,
+    minHeight: 42,
+  },
+  continueIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.sm,
+    backgroundColor: colors.peachSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
     flexShrink: 0,
   },
-  scanTextWrapper: {
+  continueName: {
     flex: 1,
-    minWidth: 0,
-    marginRight: spacing.sm,
-  },
-  scanTitle: {
-    color: colors.white,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  scanSubtitle: {
-    color: '#D0D0D0',
-    lineHeight: 16,
-  },
-  scanActionPill: {
-    width: ARROW_DIM,
-    height: ARROW_DIM,
-    borderRadius: radius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+    color: colors.ink,
+    fontWeight: '600',
+    fontSize: 13,
   },
   filterSection: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   filterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs + 2,
   },
   filterTitleRow: {
     flexDirection: 'row',
@@ -526,37 +743,58 @@ const styles = StyleSheet.create({
   },
   filterTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
   },
-  chipsContainer: {
-    gap: spacing.xs,
-    paddingVertical: spacing.xxs,
+  chipTrack: {
+    backgroundColor: colors.surfaceStrong,
+    borderColor: colors.hairlineSoft,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    padding: 2,
+  },
+  chipRow: {
+    flexDirection: 'row',
+  },
+  chipPill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    height: CHIP_HEIGHT,
+    borderRadius: radius.full,
+    backgroundColor: colors.ink,
+  },
+  chipSlot: {
+    flex: 1,
   },
   chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    flex: 1,
+    height: CHIP_HEIGHT,
+    paddingHorizontal: 2,
     borderRadius: radius.full,
-    borderWidth: 1,
-    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   productCardWrapper: {
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    marginBottom: spacing.xs + 2,
   },
   emptyContainer: {
-    padding: spacing.xxl,
+    padding: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyTitle: {
     color: colors.ink,
+    fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   emptyText: {
     color: colors.muted,
+    fontSize: 12,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 16,
   },
 });

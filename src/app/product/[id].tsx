@@ -4,9 +4,13 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   ActivityIndicator,
 } from 'react-native';
+import Animated, {
+  FadeInDown,
+  FadeOutUp,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +32,10 @@ import { IngredientRow } from '../../components/ingredient/IngredientRow';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
+import { PressableScale } from '../../components/ui/PressableScale';
 import { SourcingInquiryForm } from '../../components/forms/SourcingInquiryForm';
+import { motion, staggerDelay } from '../../design-system/motion';
 import { setProductCached } from '../../services/storage';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useProductResolution } from '../../hooks/useProductResolution';
@@ -47,6 +54,7 @@ export default function ProductResultScreen() {
   const [showRawIngredients, setShowRawIngredients] = useState(false);
   const [isSavedOffline, setIsSavedOffline] = useState(false);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     setIsSavedOffline(Boolean(product?.isCachedOffline));
@@ -62,8 +70,8 @@ export default function ProductResultScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[typography.titleSm, styles.loadingText]}>
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Text style={[typography.captionSm, styles.loadingText]}>
           {t('product.evaluating')}
         </Text>
       </View>
@@ -73,18 +81,19 @@ export default function ProductResultScreen() {
   if (!product) {
     return (
       <View style={styles.notFoundContainer}>
-        <Package size={48} color={colors.muted} />
-        <Text style={[typography.titleMd, styles.notFoundTitle]}>
+        <Package size={40} color={colors.muted} />
+        <Text style={[typography.titleSm, styles.notFoundTitle]}>
           {t('product.notFound')}
         </Text>
-        <Text style={[typography.bodySm, styles.notFoundSubtitle]}>
+        <Text style={[typography.captionSm, styles.notFoundSubtitle]}>
           {t('product.notFoundBody', { id })}
         </Text>
         <Button
           title={t('common.backHome')}
           variant="outline"
+          size="sm"
           onPress={() => router.replace('/(tabs)/home')}
-          style={{ marginTop: spacing.md }}
+          style={{ marginTop: spacing.sm }}
         />
       </View>
     );
@@ -104,13 +113,13 @@ export default function ProductResultScreen() {
       {/* Offline Status Pill Header */}
       <View style={styles.topStatusRow}>
         <View style={styles.offlinePill}>
-          <Database size={13} color={colors.success} />
+          <Database size={11} color={colors.success} />
           <Text style={[typography.micro, styles.offlinePillText]}>
             {t('product.evaluatedPill')}
           </Text>
         </View>
         {isSavedOffline && (
-          <Badge label={t('product.savedOffline')} status="neutral" size="sm" />
+          <Badge label={t('product.savedOffline')} status="neutral" size="sm" showDot />
         )}
       </View>
 
@@ -127,25 +136,25 @@ export default function ProductResultScreen() {
             />
           ) : (
             <View style={styles.imagePlaceholder}>
-              <Package size={28} color={colors.muted} />
+              <Package size={22} color={colors.muted} />
             </View>
           )}
         </View>
 
         <View style={styles.titleInfo}>
           <View style={styles.brandRow}>
-            <Text style={[typography.captionSm, styles.brandName]} numberOfLines={1} ellipsizeMode="tail">
+            <Text style={[typography.micro, styles.brandName]} numberOfLines={1} ellipsizeMode="tail">
               {product.brand.toUpperCase()}
             </Text>
             {resolvedFromRegistry && (
               <View style={styles.dbMatchTag}>
-                <ShieldCheck size={12} color={colors.success} />
+                <ShieldCheck size={11} color={colors.success} />
                 <Text style={[typography.micro, styles.dbMatchText]}>{t('product.verifiedMatch')}</Text>
               </View>
             )}
           </View>
 
-          <Text style={[typography.titleMd, styles.productName]} numberOfLines={2}>
+          <Text style={[typography.titleSm, styles.productName]} numberOfLines={2}>
             {product.name}
           </Text>
 
@@ -156,51 +165,52 @@ export default function ProductResultScreen() {
       </View>
 
       {/* Primary Verdict Hero Card */}
-      <VerdictCard
-        verdict={product.verdict}
-        confidence={product.confidence}
-        summary={product.summary}
-        language={language}
-        style={styles.verdictHero}
-      />
+      <FadeSlideIn delay={staggerDelay(0)} style={styles.verdictHero}>
+        <VerdictCard
+          verdict={product.verdict}
+          confidence={product.confidence}
+          summary={product.summary}
+          language={language}
+        />
+      </FadeSlideIn>
 
       {/* Primary Action Buttons */}
-      <View style={styles.actionsContainer}>
+      <FadeSlideIn delay={staggerDelay(1)} style={styles.actionsContainer}>
         {isUndisclosedOrAmbiguous ? (
           <Button
             title={t('product.requestDisclosure')}
-            icon={<Send size={16} color={colors.white} />}
+            icon={<Send size={14} color={colors.white} />}
             onPress={() => setShowInquiryModal(true)}
             variant="primary"
-            size="md"
+            size="sm"
             fullWidth
             style={{ marginBottom: spacing.xs }}
           />
         ) : null}
 
-        <Button
-          title={t('product.inspectEvidence')}
-          icon={<FileSearch size={16} color={colors.ink} />}
-          variant="outline"
-          size="md"
-          onPress={() => router.push(`/verification/${product.id}` as any)}
-          fullWidth
-          style={{ marginBottom: spacing.xs }}
-        />
-
-        <Button
-          title={isSavedOffline ? t('product.savedOffline') : t('product.saveOffline')}
-          variant="secondary"
-          size="sm"
-          onPress={handleToggleOffline}
-          fullWidth
-        />
-      </View>
+        <View style={styles.actionRow}>
+          <Button
+            title={t('product.inspectEvidence')}
+            icon={<FileSearch size={14} color={colors.ink} />}
+            variant="outline"
+            size="sm"
+            onPress={() => router.push(`/verification/${product.id}` as any)}
+            style={{ flex: 1 }}
+          />
+          <Button
+            title={isSavedOffline ? t('product.savedOffline') : t('product.saveOffline')}
+            variant="secondary"
+            size="sm"
+            onPress={handleToggleOffline}
+            style={{ flex: 1 }}
+          />
+        </View>
+      </FadeSlideIn>
 
       {/* Ingredients Breakdown Section */}
-      <View style={styles.sectionHeader}>
+      <FadeSlideIn delay={staggerDelay(2)} style={styles.sectionHeader}>
         <View style={styles.sectionTitleRow}>
-          <Text style={[typography.titleMd, styles.sectionTitle]}>
+          <Text style={[typography.titleSm, styles.sectionTitle]}>
             {t('product.ingredientAnalysis')}
           </Text>
           <Badge
@@ -212,46 +222,57 @@ export default function ProductResultScreen() {
         <Text style={[typography.micro, { color: colors.muted }]}>
           {t('product.tapRow')}
         </Text>
-      </View>
+      </FadeSlideIn>
 
-      <View style={[styles.ingredientsCard, shadows.subtle]}>
-        {product.ingredients.map((ingredient) => (
-          <IngredientRow
+      <FadeSlideIn delay={staggerDelay(3)} style={[styles.ingredientsCard, shadows.subtle]}>
+        {product.ingredients.map((ingredient, index) => (
+          <FadeSlideIn
             key={ingredient.id || `${ingredient.code || 'ing'}-${ingredient.name}`}
-            ingredient={ingredient}
-            onPress={() =>
-              router.push(
-                `/ingredient/${ingredient.code ? ingredient.code.split('/')[0].trim() : ingredient.name}` as any
-              )
-            }
-          />
+            delay={index <= 7 ? staggerDelay(index, 30) : 0}
+          >
+            <IngredientRow
+              ingredient={ingredient}
+              onPress={() =>
+                router.push(
+                  `/ingredient/${ingredient.code ? ingredient.code.split('/')[0].trim() : ingredient.name}` as any
+                )
+              }
+            />
+          </FadeSlideIn>
         ))}
-      </View>
+      </FadeSlideIn>
 
       {/* Raw Ingredients Text Accordion */}
-      <Pressable
+      <PressableScale
         onPress={() => setShowRawIngredients(!showRawIngredients)}
+        scaleTo={0.985}
+        haptic
+        accessibilityRole="button"
         style={[styles.accordionHeader, shadows.subtle]}
       >
         <View style={styles.accordionLeft}>
-          <FileText size={18} color={colors.muted} />
-          <Text style={[typography.titleSm, styles.accordionTitle]}>
+          <FileText size={15} color={colors.muted} />
+          <Text style={[typography.captionSm, styles.accordionTitle]}>
             {t('product.rawText')}
           </Text>
         </View>
         {showRawIngredients ? (
-          <ChevronUp size={18} color={colors.muted} />
+          <ChevronUp size={15} color={colors.muted} />
         ) : (
-          <ChevronDown size={18} color={colors.muted} />
+          <ChevronDown size={15} color={colors.muted} />
         )}
-      </Pressable>
+      </PressableScale>
 
       {showRawIngredients && (
-        <View style={styles.rawTextContainer}>
-          <Text style={[typography.bodySm, styles.rawText]}>
+        <Animated.View
+          style={styles.rawTextContainer}
+          entering={reducedMotion ? undefined : FadeInDown.duration(motion.base)}
+          exiting={reducedMotion ? undefined : FadeOutUp.duration(motion.fast)}
+        >
+          <Text style={[typography.micro, styles.rawText]}>
             {product.rawIngredientText}
           </Text>
-        </View>
+        </Animated.View>
       )}
 
       {/* Sourcing Inquiry Modal */}
@@ -282,9 +303,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceSoft,
   },
   content: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: spacing.sm + 2,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xl,
   },
   loadingContainer: {
     flex: 1,
@@ -294,7 +315,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   loadingText: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     color: colors.muted,
     textAlign: 'center',
   },
@@ -307,51 +328,54 @@ const styles = StyleSheet.create({
   },
   notFoundTitle: {
     color: colors.ink,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   notFoundSubtitle: {
     color: colors.muted,
     textAlign: 'center',
-    marginTop: spacing.xs,
-    marginBottom: spacing.lg,
+    marginTop: spacing.xxs,
+    marginBottom: spacing.md,
   },
   topStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   offlinePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.surfaceStrong,
+    gap: 4,
+    backgroundColor: colors.canvas,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
     flexShrink: 1,
   },
   offlinePillText: {
     color: colors.body,
-    fontSize: 11,
+    fontSize: 10,
+    fontWeight: '600',
   },
   productHeaderCard: {
     flexDirection: 'row',
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
     alignItems: 'center',
   },
   imageContainer: {
-    width: 68,
-    height: 68,
+    width: 54,
+    height: 54,
     borderRadius: radius.sm,
     overflow: 'hidden',
     backgroundColor: colors.surfaceSoft,
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
     flexShrink: 0,
     borderWidth: 1,
     borderColor: colors.hairlineSoft,
@@ -379,6 +403,8 @@ const styles = StyleSheet.create({
   brandName: {
     color: colors.muted,
     fontWeight: '600',
+    fontSize: 10,
+    letterSpacing: 0.4,
     flexShrink: 1,
     marginRight: spacing.xs,
   },
@@ -389,27 +415,35 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   dbMatchText: {
-    color: colors.muted,
-    fontSize: 11,
+    color: colors.success,
+    fontSize: 10,
+    fontWeight: '600',
   },
   productName: {
     color: colors.ink,
-    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
   },
   barcodeText: {
     color: colors.mutedSoft,
+    fontSize: 10,
   },
   verdictHero: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   actionsContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xxs + 2,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -418,14 +452,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
   },
   ingredientsCard: {
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
+    borderColor: colors.hairlineSoft,
     overflow: 'hidden',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   accordionHeader: {
     flexDirection: 'row',
@@ -434,31 +470,33 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   accordionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
     flex: 1,
   },
   accordionTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
   },
   rawTextContainer: {
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   rawText: {
     color: colors.body,
-    lineHeight: 20,
+    lineHeight: 16,
     fontFamily: 'monospace',
-    fontSize: 12,
+    fontSize: 11,
   },
 });

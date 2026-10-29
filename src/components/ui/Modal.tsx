@@ -40,14 +40,14 @@ export const Modal: React.FC<ModalProps> = ({
           <TouchableWithoutFeedback>
             <View style={[styles.dialog, shadows.floating, containerStyle]}>
               <View style={styles.header}>
-                <Text style={[typography.titleMd, styles.title]}>{title}</Text>
+                <Text style={[typography.titleSm, styles.title]}>{title}</Text>
                 <Pressable
                   onPress={onClose}
                   hitSlop={8}
                   style={styles.closeBtn}
                   accessibilityLabel="Close modal"
                 >
-                  <X size={20} color={colors.ink} />
+                  <X size={16} color={colors.ink} />
                 </Pressable>
               </View>
               <View style={styles.body}>{children}</View>
@@ -62,40 +62,44 @@ export const Modal: React.FC<ModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: spacing.md,
   },
   dialog: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
     backgroundColor: colors.canvas,
     borderRadius: radius.lg,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.hairlineSoft,
   },
   title: {
     color: colors.ink,
+    fontSize: 16,
+    fontWeight: '600',
   },
   closeBtn: {
-    width: 44,
-    height: 44,
+    width: 32,
+    height: 32,
     borderRadius: radius.full,
     backgroundColor: colors.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   body: {
-    padding: spacing.xl,
+    padding: spacing.lg,
   },
 });

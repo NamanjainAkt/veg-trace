@@ -15,13 +15,13 @@ export default function TabLayout() {
           backgroundColor: colors.canvas,
           borderTopColor: colors.hairlineSoft,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 52,
+          paddingBottom: 4,
+          paddingTop: 4,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontSize: 11,
+          fontWeight: '600',
         },
         headerStyle: {
           backgroundColor: colors.canvas,
@@ -29,7 +29,7 @@ export default function TabLayout() {
         headerTintColor: colors.ink,
         headerTitleStyle: {
           fontWeight: '600',
-          fontSize: 18,
+          fontSize: 16,
         },
         headerShadowVisible: false,
       }}
@@ -39,7 +39,7 @@ export default function TabLayout() {
         options={{
           title: t('tabs.explore'),
           headerTitle: t('tabs.vegtrace'),
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          tabBarIcon: ({ color }) => <Home size={20} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -47,7 +47,7 @@ export default function TabLayout() {
         options={{
           title: t('tabs.history'),
           headerTitle: t('tabs.scanHistory'),
-          tabBarIcon: ({ color, size }) => <History size={size} color={color} />,
+          tabBarIcon: ({ color }) => <History size={20} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -55,7 +55,7 @@ export default function TabLayout() {
         options={{
           title: t('tabs.profile'),
           headerTitle: t('tabs.dietPrefs'),
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          tabBarIcon: ({ color }) => <User size={20} color={color} />,
         }}
       />
     </Tabs>

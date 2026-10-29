@@ -1,9 +1,10 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Scan } from 'lucide-react-native';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius, shadows } from '../../design-system/spacing';
+import { PressableScale } from '../ui/PressableScale';
 
 export interface ScanButtonProps {
   onPress: () => void;
@@ -18,53 +19,46 @@ export const ScanButton: React.FC<ScanButtonProps> = ({
 }) => {
   if (variant === 'floating') {
     return (
-      <Pressable
+      <PressableScale
         onPress={onPress}
+        scaleTo={0.92}
+        haptic
         accessibilityRole="button"
         accessibilityLabel={title}
-        style={({ pressed }) => [
-          styles.floatingButton,
-          shadows.floating,
-          {
-            backgroundColor: pressed ? colors.primaryActive : colors.primary,
-            transform: [{ scale: pressed ? 0.95 : 1 }],
-          },
-        ]}
       >
-        <Scan size={26} color={colors.white} />
-      </Pressable>
+        <View style={[styles.floatingButton, shadows.floating]}>
+          <Scan size={22} color={colors.white} />
+        </View>
+      </PressableScale>
     );
   }
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scaleTo={0.97}
+      haptic
       accessibilityRole="button"
       accessibilityLabel={title}
-      style={({ pressed }) => [
-        styles.barButton,
-        shadows.card,
-        {
-          backgroundColor: pressed ? colors.primaryActive : colors.primary,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        },
-      ]}
     >
-      <View style={styles.iconCircle}>
-        <Scan size={20} color={colors.primary} />
+      <View style={[styles.barButton, shadows.card]}>
+        <View style={styles.iconCircle}>
+          <Scan size={18} color={colors.primary} />
+        </View>
+        <Text style={[typography.buttonMd, styles.barTitle]}>{title}</Text>
       </View>
-      <Text style={[typography.buttonMd, styles.barTitle]}>{title}</Text>
-    </Pressable>
+    </PressableScale>
   );
 };
 
-const ICON_CONTAINER_SIZE = 32;
+const ICON_CONTAINER_SIZE = 28;
 
 const styles = StyleSheet.create({
   floatingButton: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: radius.full,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -72,9 +66,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 54, // Min 48px touch target rule
+    height: 46,
     borderRadius: radius.md,
-    paddingHorizontal: spacing.xl,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
   },
   iconCircle: {
     width: ICON_CONTAINER_SIZE,
@@ -83,9 +78,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
   },
   barTitle: {
     color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

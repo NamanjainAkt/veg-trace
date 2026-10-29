@@ -3,14 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Barcode, Search, AlertCircle, ArrowRight } from 'lucide-react-native';
+import { Barcode, Search } from 'lucide-react-native';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
-import { spacing, radius } from '../../design-system/spacing';
+import { spacing } from '../../design-system/spacing';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { fetchProductByBarcode } from '../../services/openFoodFacts';
@@ -69,7 +68,7 @@ export const ManualBarcodeForm: React.FC<ManualBarcodeFormProps> = ({
       } else {
         setError(t('forms.barcodeMiss', { code: barcode }));
       }
-    } catch (e) {
+    } catch {
       setError(t('forms.networkError'));
     } finally {
       setLoading(false);
@@ -78,10 +77,10 @@ export const ManualBarcodeForm: React.FC<ManualBarcodeFormProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[typography.titleMd, styles.title]}>
+      <Text style={[typography.titleSm, styles.title]}>
         {t('forms.barcodeTitle')}
       </Text>
-      <Text style={[typography.bodySm, styles.subtitle]}>
+      <Text style={[typography.captionSm, styles.subtitle]}>
         {t('forms.barcodeBody')}
       </Text>
 
@@ -94,35 +93,31 @@ export const ManualBarcodeForm: React.FC<ManualBarcodeFormProps> = ({
         placeholder={t('forms.barcodePlaceholder')}
         keyboardType="number-pad"
         maxLength={14}
-        leftIcon={<Barcode size={20} color={colors.muted} />}
+        leftIcon={<Barcode size={18} color={colors.muted} />}
         error={error || undefined}
         containerStyle={styles.inputContainer}
       />
 
       <Button
-        title={loading ? t('forms.lookingUp') : t('forms.lookup')}
-        icon={!loading ? <Search size={18} color={colors.white} /> : undefined}
+        title={loading ? t('forms.searching') : t('forms.lookupProduct')}
         onPress={handleLookup}
-        disabled={loading || barcode.length < 8}
+        variant="primary"
+        size="md"
         loading={loading}
-        size="lg"
         fullWidth
         style={styles.submitBtn}
+        icon={!loading ? <Search size={16} color={colors.white} /> : undefined}
       />
 
       {error && onFallbackToText && (
-        <View style={styles.fallbackBox}>
-          <Text style={[typography.captionSm, styles.fallbackPrompt]}>
-            {t('forms.notInOff')}
-          </Text>
-          <Button
-            title={t('forms.pasteInstead')}
-            variant="outline"
-            size="sm"
-            onPress={onFallbackToText}
-            style={styles.fallbackBtn}
-          />
-        </View>
+        <Button
+          title={t('forms.fallbackAnalyzer')}
+          onPress={onFallbackToText}
+          variant="outline"
+          size="sm"
+          fullWidth
+          style={styles.fallbackBtn}
+        />
       )}
     </View>
   );
@@ -130,36 +125,27 @@ export const ManualBarcodeForm: React.FC<ManualBarcodeFormProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
   },
   title: {
     color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
     marginBottom: spacing.xxs,
   },
   subtitle: {
     color: colors.muted,
-    marginBottom: spacing.lg,
-    lineHeight: 20,
-  },
-  inputContainer: {
-    marginBottom: spacing.lg,
-  },
-  submitBtn: {
+    fontSize: 13,
+    lineHeight: 18,
     marginBottom: spacing.md,
   },
-  fallbackBox: {
-    backgroundColor: colors.surfaceSoft,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    marginTop: spacing.xs,
+  inputContainer: {
+    marginBottom: spacing.md,
   },
-  fallbackPrompt: {
-    color: colors.body,
+  submitBtn: {
     marginBottom: spacing.xs,
-    textAlign: 'center',
   },
   fallbackBtn: {
-    backgroundColor: colors.canvas,
+    marginTop: spacing.xs,
   },
 });

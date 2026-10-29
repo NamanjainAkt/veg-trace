@@ -6,15 +6,15 @@ import {
   ShieldCheck,
   Database,
   Cpu,
-  Heart,
   Scale,
-  ExternalLink,
 } from 'lucide-react-native';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius, shadows } from '../../design-system/spacing';
+import { staggerDelay } from '../../design-system/motion';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
 
 export default function AboutScreen() {
   const router = useRouter();
@@ -27,95 +27,105 @@ export default function AboutScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Brand Header */}
-      <View style={[styles.headerCard, shadows.card]}>
-        <View style={styles.badgeRow}>
-          <Badge label="v1.0.0 Production" status="vegetarian" size="sm" />
-          <Badge label={t('about.offlineBadge')} status="neutral" size="sm" />
+      <FadeSlideIn delay={staggerDelay(0)}>
+        <View style={[styles.headerCard, shadows.subtle]}>
+          <View style={styles.badgeRow}>
+            <Badge label="v1.0.0 Production" status="vegetarian" size="sm" showDot />
+            <Badge label={t('about.offlineBadge')} status="neutral" size="sm" />
+          </View>
+          <Text style={[typography.titleMd, styles.brandTitle]}>VegTrace</Text>
+          <Text style={[typography.captionSm, styles.tagline]}>
+            {t('about.tagline')}
+          </Text>
         </View>
-        <Text style={[typography.displayLg, styles.brandTitle]}>VegTrace</Text>
-        <Text style={[typography.bodyMd, styles.tagline]}>
-          {t('about.tagline')}
-        </Text>
-      </View>
+      </FadeSlideIn>
 
       {/* Core Principle */}
-      <View style={styles.section}>
-        <Text style={[typography.titleMd, styles.sectionTitle]}>
-          {t('about.principle')}
-        </Text>
-        <View style={styles.principleCard}>
-          <Text style={[typography.titleSm, styles.principleHighlight]}>
-            {t('onboarding.heroTitle')}
+      <FadeSlideIn delay={staggerDelay(1)}>
+        <View style={styles.section}>
+          <Text style={[typography.titleSm, styles.sectionTitle]}>
+            {t('about.principle')}
           </Text>
-          <Text style={[typography.bodySm, styles.principleBody]}>
-            {t('about.principleBody')}
-          </Text>
+          <View style={[styles.principleCard, shadows.subtle]}>
+            <Text style={[typography.titleSm, styles.principleHighlight]}>
+              {t('onboarding.heroTitle')}
+            </Text>
+            <Text style={[typography.captionSm, styles.principleBody]}>
+              {t('about.principleBody')}
+            </Text>
+          </View>
         </View>
-      </View>
+      </FadeSlideIn>
 
       {/* Data & Biochemical Taxonomies */}
-      <View style={styles.section}>
-        <Text style={[typography.titleMd, styles.sectionTitle]}>
-          {t('about.sources')}
-        </Text>
+      <FadeSlideIn delay={staggerDelay(2)}>
+        <View style={styles.section}>
+          <Text style={[typography.titleSm, styles.sectionTitle]}>
+            {t('about.sources')}
+          </Text>
 
-        <View style={styles.sourceItem}>
-          <Database size={20} color={colors.primary} />
-          <View style={styles.sourceTextCol}>
-            <Text style={[typography.titleSm, styles.sourceTitle]}>
-              Open Food Facts
-            </Text>
-            <Text style={[typography.bodySm, styles.sourceDesc]}>
-              {t('about.offBody')}
-            </Text>
+          <View style={[styles.sourceItem, shadows.subtle]}>
+            <Database size={16} color={colors.primary} />
+            <View style={styles.sourceTextCol}>
+              <Text style={[typography.titleSm, styles.sourceTitle]}>
+                Open Food Facts
+              </Text>
+              <Text style={[typography.captionSm, styles.sourceDesc]}>
+                {t('about.offBody')}
+              </Text>
+            </View>
+          </View>
+
+          <View style={[styles.sourceItem, shadows.subtle]}>
+            <Cpu size={16} color={colors.primary} />
+            <View style={styles.sourceTextCol}>
+              <Text style={[typography.titleSm, styles.sourceTitle]}>
+                INS & Codex Alimentarius
+              </Text>
+              <Text style={[typography.captionSm, styles.sourceDesc]}>
+                {t('about.insBody')}
+              </Text>
+            </View>
+          </View>
+
+          <View style={[styles.sourceItem, shadows.subtle]}>
+            <ShieldCheck size={16} color={colors.success} />
+            <View style={styles.sourceTextCol}>
+              <Text style={[typography.titleSm, styles.sourceTitle]}>
+                {t('about.zeroTitle')}
+              </Text>
+              <Text style={[typography.captionSm, styles.sourceDesc]}>
+                {t('about.zeroBody')}
+              </Text>
+            </View>
           </View>
         </View>
-
-        <View style={styles.sourceItem}>
-          <Cpu size={20} color={colors.primary} />
-          <View style={styles.sourceTextCol}>
-            <Text style={[typography.titleSm, styles.sourceTitle]}>
-              INS & Codex Alimentarius
-            </Text>
-            <Text style={[typography.bodySm, styles.sourceDesc]}>
-              {t('about.insBody')}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.sourceItem}>
-          <ShieldCheck size={20} color={colors.success} />
-          <View style={styles.sourceTextCol}>
-            <Text style={[typography.titleSm, styles.sourceTitle]}>
-              {t('about.zeroTitle')}
-            </Text>
-            <Text style={[typography.bodySm, styles.sourceDesc]}>
-              {t('about.zeroBody')}
-            </Text>
-          </View>
-        </View>
-      </View>
+      </FadeSlideIn>
 
       {/* Legal & Medical Disclaimer */}
-      <View style={styles.section}>
-        <Text style={[typography.titleMd, styles.sectionTitle]}>
-          {t('about.disclaimer')}
-        </Text>
-        <View style={styles.disclaimerCard}>
-          <Scale size={18} color={colors.muted} />
-          <Text style={[typography.captionSm, styles.disclaimerText]}>
-            {t('about.disclaimerBody')}
+      <FadeSlideIn delay={staggerDelay(3)}>
+        <View style={styles.section}>
+          <Text style={[typography.titleSm, styles.sectionTitle]}>
+            {t('about.disclaimer')}
           </Text>
+          <View style={[styles.disclaimerCard, shadows.subtle]}>
+            <Scale size={16} color={colors.muted} />
+            <Text style={[typography.captionSm, styles.disclaimerText]}>
+              {t('about.disclaimerBody')}
+            </Text>
+          </View>
         </View>
-      </View>
+      </FadeSlideIn>
 
-      <Button
-        title={t('about.back')}
-        variant="outline"
-        size="md"
-        onPress={() => router.back()}
-        style={{ marginTop: spacing.md }}
-      />
+      <FadeSlideIn delay={staggerDelay(4)}>
+        <Button
+          title={t('about.back')}
+          variant="outline"
+          size="sm"
+          onPress={() => router.back()}
+          style={{ marginTop: spacing.xs }}
+        />
+      </FadeSlideIn>
     </ScrollView>
   );
 }
@@ -126,57 +136,72 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceSoft,
   },
   content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: spacing.sm + 2,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xl,
   },
   headerCard: {
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   badgeRow: {
     flexDirection: 'row',
     gap: spacing.xs,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   brandTitle: {
     color: colors.ink,
-    marginBottom: spacing.xs,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   tagline: {
     color: colors.muted,
-    lineHeight: 22,
+    fontSize: 12,
+    lineHeight: 16,
   },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xs,
   },
   sectionTitle: {
     color: colors.ink,
-    marginBottom: spacing.sm,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: spacing.xxs + 2,
   },
   principleCard: {
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
-    padding: spacing.md,
-    borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    borderLeftWidth: 3,
     borderLeftColor: colors.primary,
   },
   principleHighlight: {
     color: colors.primary,
-    marginBottom: spacing.xs,
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   principleBody: {
     color: colors.body,
-    lineHeight: 20,
+    fontSize: 12,
+    lineHeight: 16,
   },
   sourceItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: spacing.sm,
+    gap: spacing.xs + 2,
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
-    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
     marginBottom: spacing.xs,
   },
   sourceTextCol: {
@@ -184,22 +209,29 @@ const styles = StyleSheet.create({
   },
   sourceTitle: {
     color: colors.ink,
-    marginBottom: 2,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 1,
   },
   sourceDesc: {
-    color: colors.muted,
-    lineHeight: 18,
+    color: colors.body,
+    fontSize: 11,
+    lineHeight: 15,
   },
   disclaimerCard: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    backgroundColor: colors.surfaceStrong,
+    alignItems: 'flex-start',
+    gap: spacing.xs,
+    backgroundColor: colors.canvas,
     borderRadius: radius.md,
-    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
   },
   disclaimerText: {
-    flex: 1,
     color: colors.muted,
-    lineHeight: 18,
+    flex: 1,
+    lineHeight: 15,
+    fontSize: 11,
   },
 });

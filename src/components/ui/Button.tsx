@@ -1,16 +1,25 @@
 import React from 'react';
 import {
-  Pressable,
   Text,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
   View,
+  GestureResponderEvent,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  useReducedMotion,
+} from 'react-native-reanimated';
+import { Pressable } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius } from '../../design-system/spacing';
+import { springs } from '../../design-system/motion';
 
 export interface ButtonProps {
   title: string;
@@ -23,6 +32,7 @@ export interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   fullWidth?: boolean;
+  haptic?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -36,7 +46,11 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
   fullWidth = false,
+  haptic = true,
 }) => {
+  const reducedMotion = useReducedMotion();
+  const scale = useSharedValue(1);
+
   const getBackgroundColor = (pressed: boolean) => {
     if (disabled) {
       return variant === 'primary' ? colors.primaryDisabled : colors.surfaceStrong;
@@ -62,7 +76,6 @@ export const Button: React.FC<ButtonProps> = ({
         return colors.white;
       case 'secondary':
       case 'ghost':
-        return colors.ink;
       case 'outline':
         return colors.ink;
     }
@@ -71,20 +84,45 @@ export const Button: React.FC<ButtonProps> = ({
   const getHeight = () => {
     switch (size) {
       case 'sm':
-        return 40;
+        return 36;
       case 'lg':
-        return 56;
+        return 48;
       case 'md':
       default:
-        return 48; // PRD standard 48px touch target
+        return 44;
     }
   };
 
   const typographyStyle = size === 'sm' ? typography.buttonSm : typography.buttonMd;
 
+  const handlePressIn = (e: GestureResponderEvent) => {
+    if (!disabled && !loading) {
+      if (haptic) {
+        try {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } catch {}
+      }
+      if (!reducedMotion) {
+        scale.value = withSpring(0.97, springs.snap);
+      }
+    }
+  };
+
+  const handlePressOut = (e: GestureResponderEvent) => {
+    if (!reducedMotion) {
+      scale.value = withSpring(1, springs.settle);
+    }
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={disabled || loading}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || loading }}
@@ -98,24 +136,35 @@ export const Button: React.FC<ButtonProps> = ({
           borderWidth: variant === 'outline' ? 1 : 0,
           alignSelf: fullWidth ? 'stretch' : 'auto',
           opacity: disabled ? 0.6 : 1,
-          transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
         },
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'primary' || variant === 'danger' ? colors.white : colors.ink}
-        />
-      ) : (
-        <View style={styles.contentRow}>
-          {icon && <View style={styles.iconContainer}>{icon}</View>}
-          <Text style={[typographyStyle, { color: getTextColor() }, textStyle]}>
-            {title}
-          </Text>
-        </View>
-      )}
+      <Animated.View style={[styles.contentWrapper, animatedStyle]}>
+        {loading ? (
+          <ActivityIndicator
+            size="small"
+            color={variant === 'primary' || variant === 'danger' ? colors.white : colors.ink}
+          />
+        ) : (
+          <View style={styles.contentRow}>
+            {icon && <View style={styles.iconContainer}>{icon}</View>}
+            <Text
+              style={[
+                typographyStyle,
+                {
+                  color: getTextColor(),
+                  fontSize: size === 'sm' ? 13 : 15,
+                  fontWeight: '600',
+                },
+                textStyle,
+              ]}
+            >
+              {title}
+            </Text>
+          </View>
+        )}
+      </Animated.View>
     </Pressable>
   );
 };
@@ -123,10 +172,14 @@ export const Button: React.FC<ButtonProps> = ({
 const styles = StyleSheet.create({
   base: {
     borderRadius: radius.md,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+  },
+  contentWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   contentRow: {
     flexDirection: 'row',
@@ -134,6 +187,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconContainer: {
-    marginRight: spacing.sm,
+    marginRight: spacing.xs,
   },
 });

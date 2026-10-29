@@ -26,6 +26,14 @@ export const colors = {
   primaryDisabled: '#FFD1DA',
   primaryLight: '#FFF0F2',
 
+  // Warm surfaces (playful-minimalism layer, no purple/violet)
+  peach: '#FFE9DE',
+  peachSoft: '#FFF4ED',
+  peachDeep: '#FFD9C4',
+  terracotta: '#D96D4B',
+  heroFrom: '#2E2226',
+  heroTo: '#4E3330',
+
   // Borders & Dividers
   hairline: '#DDDDDD',
   hairlineSoft: '#EBEBEB',

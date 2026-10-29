@@ -1,5 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, ViewStyle } from 'react-native';
+import React, { useEffect } from 'react';
+import { ViewStyle, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  useReducedMotion,
+  cancelAnimation,
+} from 'react-native-reanimated';
 import { colors } from '../../design-system/colors';
 import { radius } from '../../design-system/spacing';
 
@@ -12,30 +20,31 @@ export interface SkeletonProps {
 
 export const Skeleton: React.FC<SkeletonProps> = ({
   width = '100%',
-  height = 20,
+  height = 18,
   borderRadius = radius.sm,
   style,
 }) => {
-  const opacity = useRef(new Animated.Value(0.3)).current;
+  const reducedMotion = useReducedMotion();
+  const opacity = useSharedValue(reducedMotion ? 0.5 : 0.35);
 
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 0.8,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.3,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ])
+    if (reducedMotion) {
+      opacity.value = 0.5;
+      return;
+    }
+    opacity.value = withRepeat(
+      withTiming(0.8, { duration: 800 }),
+      -1,
+      true
     );
-    animation.start();
-    return () => animation.stop();
-  }, [opacity]);
+    return () => {
+      cancelAnimation(opacity);
+    };
+  }, [reducedMotion, opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
   return (
     <Animated.View
@@ -45,8 +54,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
           width: width as any,
           height,
           borderRadius,
-          opacity,
         },
+        animatedStyle,
         style,
       ]}
     />

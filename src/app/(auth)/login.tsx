@@ -6,13 +6,11 @@ import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius } from '../../design-system/spacing';
 import { Button } from '../../components/ui/Button';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
+import { staggerDelay } from '../../design-system/motion';
 import { useTranslation } from 'react-i18next';
 import { useSessionStore } from '../../store/useSessionStore';
 
-/**
- * Guest-first auth (PRD Sec 31). Google OAuth via Appwrite when the
- * provider is enabled in the console; guest mode always works offline.
- */
 export default function LoginScreen() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -37,39 +35,47 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.iconCircle}>
-        <UserRound size={32} color={colors.primary} />
-      </View>
-      <Text style={[typography.titleMd, styles.title]}>{t('login.title')}</Text>
-      <Text style={[typography.bodySm, styles.subtitle]}>
-        {t('login.body')}
-      </Text>
-      {user ? (
-        <Text style={[typography.bodySm, styles.signedIn]}>
-          {user.email}
+      <FadeSlideIn delay={staggerDelay(0)} style={styles.headerBlock}>
+        <View style={styles.iconCircle}>
+          <UserRound size={26} color={colors.primary} />
+        </View>
+        <Text style={[typography.titleSm, styles.title]}>{t('login.title')}</Text>
+      </FadeSlideIn>
+
+      <FadeSlideIn delay={staggerDelay(1)}>
+        <Text style={[typography.captionSm, styles.subtitle]}>
+          {t('login.body')}
         </Text>
-      ) : null}
-      <Button
-        title={signingIn ? t('login.signingIn') : t('login.google')}
-        size="lg"
-        fullWidth
-        disabled={signingIn}
-        onPress={handleGoogle}
-        style={styles.primaryBtn}
-      />
-      {errorText ? (
-        <Text style={[typography.captionSm, styles.errorText]}>
-          {errorText}
-        </Text>
-      ) : null}
-      <Button
-        title={t('login.continue')}
-        size="md"
-        variant="ghost"
-        fullWidth
-        disabled={signingIn}
-        onPress={() => router.replace('/(tabs)/home')}
-      />
+      </FadeSlideIn>
+
+      <FadeSlideIn delay={staggerDelay(2)} style={styles.actionsBlock}>
+        {user ? (
+          <Text style={[typography.micro, styles.signedIn]}>
+            {user.email}
+          </Text>
+        ) : null}
+        <Button
+          title={signingIn ? t('login.signingIn') : t('login.google')}
+          size="md"
+          fullWidth
+          disabled={signingIn}
+          onPress={handleGoogle}
+          style={styles.primaryBtn}
+        />
+        {errorText ? (
+          <Text style={[typography.micro, styles.errorText]}>
+            {errorText}
+          </Text>
+        ) : null}
+        <Button
+          title={t('login.continue')}
+          size="sm"
+          variant="ghost"
+          fullWidth
+          disabled={signingIn}
+          onPress={() => router.replace('/(tabs)/home')}
+        />
+      </FadeSlideIn>
     </View>
   );
 }
@@ -80,39 +86,51 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: spacing.lg,
+  },
+  headerBlock: {
+    alignItems: 'center',
   },
   iconCircle: {
-    width: 72,
-    height: 72,
+    width: 52,
+    height: 52,
     borderRadius: radius.full,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   title: {
     color: colors.ink,
-    marginBottom: spacing.xs,
+    fontSize: 18,
+    fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {
     color: colors.muted,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.xl,
+    lineHeight: 18,
+    fontSize: 13,
+    marginTop: spacing.xxs,
+    marginBottom: spacing.lg,
+    maxWidth: 280,
+  },
+  actionsBlock: {
+    width: '100%',
+    maxWidth: 320,
+    alignItems: 'center',
   },
   signedIn: {
-    color: colors.success,
-    marginBottom: spacing.md,
+    color: colors.muted,
+    marginBottom: spacing.xs,
   },
   primaryBtn: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   errorText: {
     color: colors.error,
     textAlign: 'center',
-    marginBottom: spacing.sm,
-    lineHeight: 18,
+    marginBottom: spacing.xs,
+    fontSize: 11,
   },
 });

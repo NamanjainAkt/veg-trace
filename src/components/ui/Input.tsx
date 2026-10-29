@@ -34,7 +34,7 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={[typography.titleSm, styles.label]}>{label}</Text>}
+      {label && <Text style={[typography.caption, styles.label]}>{label}</Text>}
       <View
         style={[
           styles.inputWrapper,
@@ -54,7 +54,7 @@ export const Input: React.FC<InputProps> = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           style={[
-            typography.bodyMd,
+            typography.bodySm,
             styles.input,
             { color: colors.ink },
             style,
@@ -78,33 +78,38 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.ink,
-    marginBottom: spacing.xs,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: spacing.xxs + 2,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 48, // 48px touch target
+    height: 42,
     borderRadius: radius.md,
-    borderWidth: 1.5,
+    borderWidth: 1,
     paddingHorizontal: spacing.md,
   },
   input: {
     flex: 1,
     height: '100%',
     paddingVertical: 0,
+    fontSize: 14,
   },
   iconLeft: {
-    marginRight: spacing.sm,
+    marginRight: spacing.xs,
   },
   iconRight: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.xs,
   },
   errorText: {
     color: colors.error,
-    marginTop: spacing.xs,
+    marginTop: spacing.xxs,
+    fontSize: 12,
   },
   helperText: {
     color: colors.muted,
-    marginTop: spacing.xs,
+    marginTop: spacing.xxs,
+    fontSize: 12,
   },
 });

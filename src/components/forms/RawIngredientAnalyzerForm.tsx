@@ -5,16 +5,17 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, FileText, CheckCircle2 } from 'lucide-react-native';
+import { Sparkles, FileText } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius } from '../../design-system/spacing';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import { PressableScale } from '../ui/PressableScale';
 import { evaluateIngredients, MAX_INGREDIENT_TEXT_LENGTH } from '../../services/ingredientEngine';
 import { getDietaryPreferences, saveScanProduct } from '../../services/storage';
 import { Product } from '../../types';
@@ -25,19 +26,19 @@ export interface RawIngredientAnalyzerFormProps {
 
 const SAMPLE_TEXTS = [
   {
-    label: 'E471 Biscuit Label',
+    label: 'E471 Biscuit',
     name: 'Digestive Biscuits',
     brand: 'McVitie\'s',
     text: 'Wheat Flour, Palm Oil, Sugar, Wholemeal Wheat Flour, Emulsifier (INS 471), Raising Agents (Sodium Bicarbonate), Salt.',
   },
   {
-    label: 'Gelatin Candy Label',
+    label: 'Gelatin Candy',
     name: 'Fruity Gummy Drops',
     brand: 'Sweet Treats',
     text: 'Corn Syrup, Sugar, Gelatin (E441), Citric Acid, Natural Flavours, Carmine Color (E120), Carnauba Wax.',
   },
   {
-    label: 'Dark Chocolate Label',
+    label: 'Dark Chocolate',
     name: '70% Dark Chocolate',
     brand: 'Pure Cacao',
     text: 'Cocoa Mass, Cane Sugar, Cocoa Butter, Emulsifier (Soy Lecithin INS 322), Vanilla Extract.',
@@ -56,6 +57,9 @@ export const RawIngredientAnalyzerForm: React.FC<RawIngredientAnalyzerFormProps>
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleApplySample = (sample: typeof SAMPLE_TEXTS[0]) => {
+    try {
+      void Haptics.selectionAsync();
+    } catch {}
     setProductName(sample.name);
     setBrand(sample.brand);
     setIngredientText(sample.text);
@@ -94,7 +98,7 @@ export const RawIngredientAnalyzerForm: React.FC<RawIngredientAnalyzerFormProps>
       await saveScanProduct(newProduct);
       onSuccess?.();
       router.push(`/product/${newProduct.id}` as any);
-    } catch (e) {
+    } catch {
       setError(t('forms.analyzeError'));
     } finally {
       setIsSubmitting(false);
@@ -102,31 +106,38 @@ export const RawIngredientAnalyzerForm: React.FC<RawIngredientAnalyzerFormProps>
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[typography.titleMd, styles.title]}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Text style={[typography.titleSm, styles.title]}>
         {t('forms.analyzerTitle')}
       </Text>
-      <Text style={[typography.bodySm, styles.subtitle]}>
+      <Text style={[typography.captionSm, styles.subtitle]}>
         {t('forms.analyzerBody')}
       </Text>
 
-      {/* Quick Sample Chips */}
-      <View style={styles.samplesSection}>
-        <Text style={[typography.micro, styles.samplesTitle]}>
-          {t('forms.sampleLabel')}
+      {/* Quick Sample Presets */}
+      <View style={styles.samplesWrapper}>
+        <Text style={[typography.micro, styles.samplesLabel]}>
+          {t('forms.quickSamples')}
         </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.samplesScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.samplesScroll}
+        >
           {SAMPLE_TEXTS.map((sample) => (
-            <Pressable
+            <PressableScale
               key={sample.label}
               onPress={() => handleApplySample(sample)}
-              style={styles.sampleChip}
+              scaleTo={0.96}
+              haptic
             >
-              <Sparkles size={12} color={colors.primary} />
-              <Text style={[typography.captionSm, styles.sampleChipText]}>
-                {sample.label}
-              </Text>
-            </Pressable>
+              <View style={styles.sampleChip}>
+                <Sparkles size={11} color={colors.primary} />
+                <Text style={[typography.micro, styles.sampleChipText]}>
+                  {sample.label}
+                </Text>
+              </View>
+            </PressableScale>
           ))}
         </ScrollView>
       </View>
@@ -135,80 +146,91 @@ export const RawIngredientAnalyzerForm: React.FC<RawIngredientAnalyzerFormProps>
         label={t('forms.productName')}
         value={productName}
         onChangeText={setProductName}
-        placeholder={t('forms.productNamePh')}
-        containerStyle={styles.field}
+        placeholder={t('forms.productPlaceholder')}
+        containerStyle={styles.inputField}
       />
 
       <Input
-        label={t('forms.brand')}
+        label={t('forms.brandName')}
         value={brand}
         onChangeText={setBrand}
-        placeholder={t('forms.brandPh')}
-        containerStyle={styles.field}
+        placeholder={t('forms.brandPlaceholder')}
+        containerStyle={styles.inputField}
       />
 
-      {/* Multi-line Ingredients Text Input */}
-      <View style={styles.field}>
-        <Text style={[typography.titleSm, styles.label]}>
-          {t('forms.ingredients')}
+      <View style={styles.textareaWrapper}>
+        <Text style={[typography.caption, styles.fieldLabel]}>
+          {t('forms.ingredientLabelText')}
         </Text>
         <View
           style={[
-            styles.textareaWrapper,
-            { borderColor: error ? colors.error : colors.hairline },
+            styles.textareaContainer,
+            error ? { borderColor: colors.error } : null,
           ]}
         >
           <TextInput
             value={ingredientText}
-            onChangeText={(text) => {
-              setIngredientText(text);
+            onChangeText={(txt) => {
+              setIngredientText(txt);
               if (error) setError(null);
             }}
-            placeholder={t('forms.ingredientsPh')}
+            placeholder={t('forms.ingredientsPlaceholder')}
             placeholderTextColor={colors.mutedSoft}
             multiline
             numberOfLines={4}
-            maxLength={5000}
-            style={[typography.bodyMd, styles.textarea]}
             textAlignVertical="top"
+            maxLength={MAX_INGREDIENT_TEXT_LENGTH}
+            style={[typography.bodySm, styles.textarea]}
           />
         </View>
-        {error && (
-          <Text style={[typography.captionSm, styles.errorText]}>{error}</Text>
-        )}
+        <View style={styles.textareaFooter}>
+          {error ? (
+            <Text style={[typography.micro, styles.errorText]}>{error}</Text>
+          ) : (
+            <View />
+          )}
+          <Text style={[typography.micro, styles.charCounter]}>
+            {ingredientText.length}/{MAX_INGREDIENT_TEXT_LENGTH}
+          </Text>
+        </View>
       </View>
 
       <Button
-        title={isSubmitting ? t('forms.analyzing') : t('forms.analyze')}
-        icon={<CheckCircle2 size={18} color={colors.white} />}
+        title={isSubmitting ? t('forms.analyzing') : t('forms.analyzeAction')}
         onPress={handleAnalyze}
+        variant="primary"
+        size="md"
         loading={isSubmitting}
-        size="lg"
         fullWidth
-        style={styles.analyzeBtn}
+        style={styles.submitBtn}
+        icon={!isSubmitting ? <FileText size={16} color={colors.white} /> : undefined}
       />
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
   },
   title: {
     color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
     marginBottom: spacing.xxs,
   },
   subtitle: {
     color: colors.muted,
-    marginBottom: spacing.md,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: spacing.sm,
   },
-  samplesSection: {
-    marginBottom: spacing.lg,
+  samplesWrapper: {
+    marginBottom: spacing.sm,
   },
-  samplesTitle: {
+  samplesLabel: {
     color: colors.muted,
+    fontSize: 11,
     marginBottom: spacing.xs,
   },
   samplesScroll: {
@@ -219,38 +241,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     backgroundColor: colors.surfaceSoft,
-    borderColor: colors.hairline,
     borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
+    borderColor: colors.hairlineSoft,
     borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
   sampleChipText: {
     color: colors.ink,
+    fontSize: 11,
+    fontWeight: '600',
   },
-  field: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    color: colors.ink,
+  inputField: {
     marginBottom: spacing.xs,
   },
   textareaWrapper: {
+    marginBottom: spacing.md,
+  },
+  fieldLabel: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: spacing.xxs + 2,
+  },
+  textareaContainer: {
     backgroundColor: colors.surfaceSoft,
+    borderWidth: 1,
+    borderColor: colors.hairline,
     borderRadius: radius.md,
-    borderWidth: 1.5,
-    padding: spacing.md,
-    minHeight: 110,
+    padding: spacing.sm,
+    minHeight: 80,
   },
   textarea: {
     color: colors.ink,
-    minHeight: 90,
+    fontSize: 13,
+    lineHeight: 18,
+    height: 72,
+    padding: 0,
+  },
+  textareaFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.xxs,
   },
   errorText: {
     color: colors.error,
-    marginTop: spacing.xs,
+    fontSize: 11,
   },
-  analyzeBtn: {
-    marginTop: spacing.sm,
+  charCounter: {
+    color: colors.mutedSoft,
+    fontSize: 11,
+    alignSelf: 'flex-end',
+  },
+  submitBtn: {
+    marginBottom: spacing.sm,
   },
 });

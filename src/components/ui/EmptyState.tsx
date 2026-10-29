@@ -25,8 +25,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <View style={[styles.container, style]}>
       <View style={styles.iconContainer}>{icon}</View>
-      <Text style={[typography.titleMd, styles.title]}>{title}</Text>
-      <Text style={[typography.bodySm, styles.description]}>{description}</Text>
+      <Text style={[typography.titleSm, styles.title]}>{title}</Text>
+      <Text style={[typography.captionSm, styles.description]}>{description}</Text>
       {actionLabel && onAction && (
         <Button
           title={actionLabel}
@@ -44,31 +44,31 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xxl,
-    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
   iconContainer: {
-    width: 64,
-    height: 64,
+    width: 48,
+    height: 48,
     borderRadius: radius.full,
     backgroundColor: colors.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   title: {
     color: colors.ink,
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   description: {
     color: colors.muted,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: spacing.lg,
-    maxWidth: 280,
+    lineHeight: 18,
+    marginBottom: spacing.md,
+    maxWidth: 260,
   },
   actionButton: {
-    marginTop: spacing.xs,
+    marginTop: spacing.xxs,
   },
 });

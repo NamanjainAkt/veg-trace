@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,14 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -21,6 +29,9 @@ import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius, shadows } from '../../design-system/spacing';
 import { Badge } from '../../components/ui/Badge';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
+import { UnknownAdditiveIllustration } from '../../components/illustrations/Illustrations';
+import { motion, staggerDelay } from '../../design-system/motion';
 import { EvidenceCard } from '../../components/verification/EvidenceCard';
 import { useProductResolution } from '../../hooks/useProductResolution';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
@@ -32,7 +43,6 @@ import {
   KNOWLEDGE_BASE_BUILD_DATE,
   lookupAdditive,
 } from '../../services/knowledgeBase';
-import { sqliteGetVerification } from '../../database/sqlite';
 
 function resolveAdditive(raw: string | undefined): AdditiveDefinition | null {
   if (!raw) return null;
@@ -88,80 +98,110 @@ function additiveToVerificationProduct(additive: AdditiveDefinition): Product {
   };
 }
 
-type StageStatus = 'done' | 'pending';
-
 interface PipelineStage {
   step: number;
   title: string;
-  icon: typeof Database;
   detail: string;
-  status: StageStatus;
+  status: 'done' | 'pending';
+  icon: typeof Camera;
 }
 
 function buildPipelineStages(
   product: Product,
   source: string | undefined,
   disclosure: ManufacturerDisclosure | null,
-  t: (key: string) => string
+  t: (key: string, opt?: any) => string
 ): PipelineStage[] {
-  const webTrailHit =
-    product.ingredients.some((ing) =>
-      (ing.evidenceTrail ?? []).some((ev) => Boolean(ev.sourceUrl))
-    ) || (disclosure?.snippets.length ?? 0) > 0;
+  const isOcr = source === 'ocr_label' || product.barcode.startsWith('custom-');
+  const stage1Title = isOcr ? t('verification.stageOcr') : t('verification.stageBarcode');
+  const stage1Detail = isOcr
+    ? t('verification.stageOcrDetail', { count: product.rawIngredientText.length })
+    : t('verification.stageBarcodeDetail', { code: product.barcode });
+
+  const stage2Detail =
+    source === 'open_food_facts'
+      ? t('verification.stageOffDetail')
+      : source === 'database'
+        ? t('verification.stageDbDetail')
+        : t('verification.stageKbDetail');
+
+  const disclosedCount = product.ingredients.filter(
+    (i) => i.manufacturerDisclosed
+  ).length;
 
   return [
     {
       step: 1,
-      title: t('verification.stepOff'),
-      icon: Database,
-      detail: t('verification.stepOffBody'),
-      status:
-        source === 'open_food_facts' || source === 'open_food_facts_search' || /^\d+$/.test(product.barcode)
-          ? 'done'
-          : 'pending',
+      title: stage1Title,
+      detail: stage1Detail,
+      status: 'done',
+      icon: isOcr ? Camera : Search,
     },
     {
       step: 2,
-      title: t('verification.stepOcr'),
-      icon: Camera,
-      detail: t('verification.stepOcrBody'),
-      status: product.rawIngredientText.length > 0 ? 'done' : 'pending',
+      title: t('verification.stage2Title'),
+      detail: stage2Detail,
+      status: 'done',
+      icon: Database,
     },
     {
       step: 3,
-      title: t('verification.stepKb'),
+      title: t('verification.stage3Title'),
+      detail: t('verification.stage3Detail', {
+        identified: product.ingredients.length,
+        disclosed: disclosedCount,
+      }),
+      status: 'done',
       icon: Cpu,
-      detail: t('verification.stepKbBody'),
-      status: product.ingredients.some((ing) => Boolean(ing.code)) ? 'done' : 'pending',
     },
     {
       step: 4,
-      title: t('verification.stepWeb'),
-      icon: Search,
-      detail: t('verification.stepWebBody'),
-      status:
-        source === 'web_search' || source === 'cloud_worker' || webTrailHit
-          ? 'done'
-          : 'pending',
-    },
-    {
-      step: 5,
-      title: t('verification.stepVerdict'),
-      icon: ShieldCheck,
-      detail: t('verification.stepVerdictBody'),
+      title: t('verification.stage4Title'),
+      detail: disclosure?.disclosed
+        ? t('verification.stage4Disclosure')
+        : t('verification.stage4Applied', {
+            rule: colors.verdicts[product.verdict].label,
+          }),
       status: 'done',
+      icon: ShieldCheck,
     },
   ];
 }
 
 function collectEvidence(product: Product): VerificationEvidence[] {
-  const byId = new Map<string, VerificationEvidence>();
+  const map = new Map<string, VerificationEvidence>();
   for (const ing of product.ingredients) {
     for (const ev of ing.evidenceTrail ?? []) {
-      if (!byId.has(ev.id)) byId.set(ev.id, ev);
+      if (!map.has(ev.id)) map.set(ev.id, ev);
     }
   }
-  return [...byId.values()];
+  return Array.from(map.values());
+}
+
+function StepConnector({ delay }: { delay: number }) {
+  const reduced = useReducedMotion();
+  const scaleY = useSharedValue(reduced ? 1 : 0);
+
+  useEffect(() => {
+    if (reduced) {
+      scaleY.value = 1;
+      return;
+    }
+    scaleY.value = withDelay(
+      delay,
+      withTiming(1, { duration: motion.base, easing: Easing.out(Easing.cubic) })
+    );
+  }, [reduced, delay, scaleY]);
+
+  const lineStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleY: scaleY.value }],
+  }));
+
+  return (
+    <Animated.View
+      style={[styles.stepLine, { transformOrigin: 'center top' }, lineStyle]}
+    />
+  );
 }
 
 export default function VerificationTrailScreen() {
@@ -179,8 +219,8 @@ export default function VerificationTrailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[typography.bodySm, styles.loadingText]}>
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Text style={[typography.captionSm, styles.loadingText]}>
           {t('product.evaluating')}
         </Text>
       </View>
@@ -190,11 +230,11 @@ export default function VerificationTrailScreen() {
   if (!product) {
     return (
       <View style={styles.loadingContainer}>
-        <Database size={44} color={colors.mutedSoft} />
-        <Text style={[typography.titleMd, styles.loadingText, { color: colors.ink }]}>
+        <Database size={36} color={colors.mutedSoft} />
+        <Text style={[typography.titleSm, styles.loadingText, { color: colors.ink }]}>
           {t('product.notFound')}
         </Text>
-        <Text style={[typography.bodySm, styles.notFoundBody]}>
+        <Text style={[typography.captionSm, styles.notFoundBody]}>
           {t('product.notFoundBody', { id })}
         </Text>
       </View>
@@ -220,10 +260,10 @@ export default function VerificationTrailScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[typography.displayLg, styles.title]}>
+        <Text style={[typography.titleSm, styles.title]}>
           {t('verification.title')}
         </Text>
-        <Text style={[typography.bodySm, styles.subtitle]}>
+        <Text style={[typography.captionSm, styles.subtitle]}>
           {t('verification.subtitle')}
         </Text>
         <Text style={[typography.micro, styles.verifiedAt]}>
@@ -232,44 +272,43 @@ export default function VerificationTrailScreen() {
       </View>
 
       {/* Pipeline Stepper */}
-      <View style={[styles.pipelineCard, shadows.card]}>
+      <View style={[styles.pipelineCard, shadows.subtle]}>
         <View style={styles.pipelineHeader}>
           <Text style={[typography.titleSm, styles.pipelineTitle]}>
             {t('verification.traceTitle')}
           </Text>
-          <Badge label={t('verification.complete')} status="neutral" size="sm" />
+          <Badge label={t('verification.complete')} status="vegetarian" size="sm" showDot />
         </View>
-        <Text style={[typography.titleSm, styles.pipelineProductName]} numberOfLines={2}>
+        <Text style={[typography.captionSm, styles.pipelineProductName]} numberOfLines={1}>
           {product.name}
         </Text>
 
         <View style={styles.stepperContainer}>
           {pipelineStages.map((stage, idx) => {
-            const Icon = stage.icon;
             const isLast = idx === pipelineStages.length - 1;
             const done = stage.status === 'done';
             return (
-              <View key={stage.step} style={styles.stepRow}>
+              <FadeSlideIn key={stage.step} delay={staggerDelay(idx, 35)} style={styles.stepRow}>
                 <View style={styles.stepIndicatorCol}>
                   <View style={[styles.stepIconCircle, !done && styles.stepIconCirclePending]}>
                     {done ? (
-                      <CheckCircle2 size={16} color={colors.success} />
+                      <CheckCircle2 size={13} color={colors.success} />
                     ) : (
-                      <Clock size={16} color={colors.muted} />
+                      <Clock size={13} color={colors.muted} />
                     )}
                   </View>
-                  {!isLast && <View style={styles.stepLine} />}
+                  {!isLast && <StepConnector delay={staggerDelay(idx, 35) + 100} />}
                 </View>
 
                 <View style={styles.stepContentCol}>
                   <Text style={[typography.titleSm, styles.stepTitle]}>
                     {stage.title}
                   </Text>
-                  <Text style={[typography.bodySm, styles.stepDetail]}>
+                  <Text style={[typography.captionSm, styles.stepDetail]}>
                     {stage.detail}
                   </Text>
                 </View>
-              </View>
+              </FadeSlideIn>
             );
           })}
         </View>
@@ -280,7 +319,7 @@ export default function VerificationTrailScreen() {
         <View style={[styles.disclosureCard, shadows.subtle]}>
           <View style={styles.disclosureHeader}>
             <ShieldCheck
-              size={16}
+              size={15}
               color={disclosure.disclosed ? colors.success : colors.muted}
             />
             <Text style={[typography.titleSm, styles.disclosureTitle]}>
@@ -299,7 +338,7 @@ export default function VerificationTrailScreen() {
 
       {/* Sourcing Evidence Entries */}
       <View style={styles.evidenceSection}>
-        <Text style={[typography.titleMd, styles.sectionTitle]}>
+        <Text style={[typography.titleSm, styles.sectionTitle]}>
           {t('verification.evidenceTitle')}
         </Text>
         <Text style={[typography.captionSm, styles.sectionSubtitle]}>
@@ -312,8 +351,10 @@ export default function VerificationTrailScreen() {
           ))
         ) : (
           <View style={styles.emptyEvidenceCard}>
-            <Database size={24} color={colors.muted} style={{ marginBottom: spacing.xs }} />
-            <Text style={[typography.bodySm, styles.emptyEvidenceText]}>
+            <View style={{ marginBottom: spacing.xs }}>
+              <UnknownAdditiveIllustration size={48} />
+            </View>
+            <Text style={[typography.captionSm, styles.emptyEvidenceText]}>
               {t('verification.noEvidence')}
             </Text>
           </View>
@@ -321,8 +362,8 @@ export default function VerificationTrailScreen() {
 
         {onDeviceOnly.length > 0 && (
           <View style={styles.onDeviceNote}>
-            <Cpu size={14} color={colors.muted} />
-            <Text style={[typography.captionSm, styles.onDeviceText]}>
+            <Cpu size={13} color={colors.muted} />
+            <Text style={[typography.micro, styles.onDeviceText]}>
               {`${onDeviceOnly.join(', ')} — ${t('product.evaluatedPill')}`}
             </Text>
           </View>
@@ -332,18 +373,18 @@ export default function VerificationTrailScreen() {
   );
 }
 
-const STEP_WIDTH = 28;
-const STEP_ICON_DIM = 24;
+const STEP_WIDTH = 24;
+const STEP_ICON_DIM = 20;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.canvas,
+    backgroundColor: colors.surfaceSoft,
   },
   content: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xxxl,
+    paddingHorizontal: spacing.sm + 2,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xl,
   },
   loadingContainer: {
     flex: 1,
@@ -353,52 +394,66 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   loadingText: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     color: colors.muted,
     textAlign: 'center',
+    fontSize: 13,
   },
   notFoundBody: {
     color: colors.muted,
     textAlign: 'center',
-    marginTop: spacing.xs,
-    lineHeight: 20,
+    marginTop: spacing.xxs,
+    lineHeight: 18,
+    fontSize: 12,
   },
   header: {
-    marginBottom: spacing.lg,
+    backgroundColor: colors.canvas,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   title: {
     color: colors.ink,
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   subtitle: {
     color: colors.muted,
+    fontSize: 12,
   },
   verifiedAt: {
     color: colors.mutedSoft,
-    marginTop: spacing.xs,
+    marginTop: spacing.xxs,
+    fontSize: 10,
   },
   pipelineCard: {
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   pipelineHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xs,
   },
   pipelineTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
     flex: 1,
-    marginRight: spacing.sm,
+    marginRight: spacing.xs,
   },
   pipelineProductName: {
     color: colors.body,
-    marginBottom: spacing.md,
+    fontSize: 12,
+    marginBottom: spacing.sm,
   },
   stepperContainer: {},
   stepRow: {
@@ -423,55 +478,63 @@ const styles = StyleSheet.create({
     width: 2,
     flex: 1,
     backgroundColor: colors.hairlineSoft,
-    marginVertical: 4,
+    marginVertical: 2,
   },
   stepContentCol: {
     flex: 1,
-    marginLeft: spacing.sm,
-    paddingBottom: spacing.lg,
+    marginLeft: spacing.xs + 2,
+    paddingBottom: spacing.sm,
   },
   stepTitle: {
     color: colors.ink,
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '600',
   },
   stepDetail: {
     color: colors.body,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 15,
   },
   disclosureCard: {
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
-    marginBottom: spacing.xl,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   disclosureHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   disclosureTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
     flex: 1,
   },
   disclosureSnippet: {
     color: colors.body,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 15,
     marginTop: spacing.xxs,
     fontStyle: 'italic',
   },
   evidenceSection: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
     marginBottom: 2,
   },
   sectionSubtitle: {
     color: colors.muted,
-    marginBottom: spacing.md,
+    fontSize: 11,
+    marginBottom: spacing.xs,
   },
   onDeviceNote: {
     flexDirection: 'row',
@@ -479,26 +542,29 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     backgroundColor: colors.surfaceSoft,
     borderRadius: radius.sm,
-    padding: spacing.md,
+    padding: spacing.xs + 2,
+    marginTop: spacing.xs,
   },
   onDeviceText: {
     color: colors.muted,
     flex: 1,
-    lineHeight: 18,
+    lineHeight: 15,
+    fontSize: 10,
   },
   emptyEvidenceCard: {
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.lg,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   emptyEvidenceText: {
     color: colors.muted,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 16,
+    fontSize: 12,
   },
 });

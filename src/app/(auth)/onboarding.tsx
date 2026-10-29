@@ -8,12 +8,14 @@ import {
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, Camera, FileSearch, Sparkles } from 'lucide-react-native';
+import { ShieldCheck, Camera, FileSearch } from 'lucide-react-native';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius, shadows } from '../../design-system/spacing';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
+import { staggerDelay } from '../../design-system/motion';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -32,14 +34,14 @@ export default function OnboardingScreen() {
       {/* Top Header Badge */}
       <View style={styles.topHeader}>
         <View style={styles.logoRow}>
-          <Text style={[typography.displayMd, styles.logoText]}>VegTrace</Text>
+          <Text style={[typography.titleSm, styles.logoText]}>VegTrace</Text>
           <View style={styles.greenDot} />
         </View>
-        <Badge label={t('onboarding.auditBadge')} status="vegetarian" size="sm" />
+        <Badge label={t('onboarding.auditBadge')} status="vegetarian" size="sm" showDot />
       </View>
 
       {/* Hero Visual Card */}
-      <View style={[styles.heroCard, shadows.card]}>
+      <FadeSlideIn delay={staggerDelay(0)} style={[styles.heroCard, shadows.subtle]}>
         <Image
           source={{
             uri: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80',
@@ -53,20 +55,20 @@ export default function OnboardingScreen() {
           <Badge label={t('onboarding.liveBadge')} status="neutral" size="sm" />
         </View>
         <View style={styles.heroTextContainer}>
-          <Text style={[typography.displayXl, styles.heroTitle]}>
+          <Text style={[typography.titleMd, styles.heroTitle]}>
             {t('onboarding.heroTitle')}
           </Text>
-          <Text style={[typography.bodyMd, styles.heroSubtitle]}>
+          <Text style={[typography.captionSm, styles.heroSubtitle]}>
             {t('onboarding.heroBody')}
           </Text>
         </View>
-      </View>
+      </FadeSlideIn>
 
       {/* 3 Pillar Cards */}
       <View style={styles.pillarsSection}>
-        <View style={[styles.pillarCard, shadows.subtle]}>
+        <FadeSlideIn delay={staggerDelay(1)} style={[styles.pillarCard, shadows.subtle]}>
           <View style={styles.pillarIconCircle}>
-            <Camera size={22} color={colors.primary} />
+            <Camera size={16} color={colors.primary} />
           </View>
           <View style={styles.pillarTextWrapper}>
             <View style={styles.pillarHeaderRow}>
@@ -75,15 +77,15 @@ export default function OnboardingScreen() {
               </Text>
               <Badge label={t('onboarding.ocrBadge')} status="vegetarian" size="sm" />
             </View>
-            <Text style={[typography.bodySm, styles.pillarDesc]}>
+            <Text style={[typography.captionSm, styles.pillarDesc]}>
               {t('onboarding.ocrBody')}
             </Text>
           </View>
-        </View>
+        </FadeSlideIn>
 
-        <View style={[styles.pillarCard, shadows.subtle]}>
+        <FadeSlideIn delay={staggerDelay(2)} style={[styles.pillarCard, shadows.subtle]}>
           <View style={styles.pillarIconCircle}>
-            <ShieldCheck size={22} color={colors.primary} />
+            <ShieldCheck size={16} color={colors.primary} />
           </View>
           <View style={styles.pillarTextWrapper}>
             <View style={styles.pillarHeaderRow}>
@@ -92,15 +94,15 @@ export default function OnboardingScreen() {
               </Text>
               <Badge label={t('onboarding.evidenceBadge')} status="brand" size="sm" />
             </View>
-            <Text style={[typography.bodySm, styles.pillarDesc]}>
+            <Text style={[typography.captionSm, styles.pillarDesc]}>
               {t('onboarding.evidenceBody')}
             </Text>
           </View>
-        </View>
+        </FadeSlideIn>
 
-        <View style={[styles.pillarCard, shadows.subtle]}>
+        <FadeSlideIn delay={staggerDelay(3)} style={[styles.pillarCard, shadows.subtle]}>
           <View style={styles.pillarIconCircle}>
-            <FileSearch size={22} color={colors.primary} />
+            <FileSearch size={16} color={colors.primary} />
           </View>
           <View style={styles.pillarTextWrapper}>
             <View style={styles.pillarHeaderRow}>
@@ -109,11 +111,11 @@ export default function OnboardingScreen() {
               </Text>
               <Badge label={t('onboarding.sourceBadge')} status="sourceDependent" size="sm" />
             </View>
-            <Text style={[typography.bodySm, styles.pillarDesc]}>
+            <Text style={[typography.captionSm, styles.pillarDesc]}>
               {t('onboarding.sourceBody')}
             </Text>
           </View>
-        </View>
+        </FadeSlideIn>
       </View>
 
       {/* Bottom Actions */}
@@ -122,7 +124,7 @@ export default function OnboardingScreen() {
           title={t('onboarding.startBtn')}
           onPress={handleFinish}
           variant="primary"
-          size="lg"
+          size="md"
           fullWidth
           style={styles.primaryBtn}
         />
@@ -130,7 +132,7 @@ export default function OnboardingScreen() {
           title={t('onboarding.guestBtn')}
           onPress={handleFinish}
           variant="ghost"
-          size="md"
+          size="sm"
           fullWidth
         />
       </View>
@@ -138,23 +140,23 @@ export default function OnboardingScreen() {
   );
 }
 
-const HERO_IMAGE_HEIGHT = 200;
+const HERO_IMAGE_HEIGHT = 140;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.canvas,
+    backgroundColor: colors.surfaceSoft,
   },
   content: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxxl,
+    paddingHorizontal: spacing.sm + 2,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
   },
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xs,
   },
   logoRow: {
     flexDirection: 'row',
@@ -163,20 +165,22 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
   },
   greenDot: {
-    width: 8,
-    height: 8,
+    width: 6,
+    height: 6,
     borderRadius: radius.full,
     backgroundColor: colors.success,
   },
   heroCard: {
     backgroundColor: colors.canvas,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.hairline,
-    marginBottom: spacing.xl,
+    borderColor: colors.hairlineSoft,
+    marginBottom: spacing.xs,
   },
   heroImage: {
     width: '100%',
@@ -184,40 +188,43 @@ const styles = StyleSheet.create({
   },
   heroOverlay: {
     position: 'absolute',
-    top: spacing.md,
-    left: spacing.md,
+    top: spacing.sm,
+    left: spacing.sm,
   },
   heroTextContainer: {
-    padding: spacing.xl,
+    padding: spacing.sm,
   },
   heroTitle: {
     color: colors.ink,
-    marginBottom: spacing.xs,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   heroSubtitle: {
     color: colors.body,
-    lineHeight: 22,
+    fontSize: 12,
+    lineHeight: 16,
   },
   pillarsSection: {
-    gap: spacing.md,
-    marginBottom: spacing.xxl,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   pillarCard: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
   },
   pillarIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
-    backgroundColor: colors.canvas,
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
   },
   pillarTextWrapper: {
     flex: 1,
@@ -226,21 +233,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xxs,
+    marginBottom: 2,
   },
   pillarTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
     flex: 1,
     marginRight: spacing.xs,
   },
   pillarDesc: {
     color: colors.muted,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 15,
   },
   actionsContainer: {
-    gap: spacing.xs,
+    gap: spacing.xxs,
   },
   primaryBtn: {
-    marginBottom: spacing.xs,
+    marginBottom: 2,
   },
 });

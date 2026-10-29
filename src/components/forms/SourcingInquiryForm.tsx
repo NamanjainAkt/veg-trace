@@ -55,7 +55,7 @@ export const SourcingInquiryForm: React.FC<SourcingInquiryFormProps> = ({
       setSubmitted(true);
       successTimer.current = setTimeout(() => {
         onSuccess?.();
-      }, 1800);
+      }, 1600);
     } catch {
       setError(t('forms.inquirySaveFailed'));
     } finally {
@@ -66,11 +66,11 @@ export const SourcingInquiryForm: React.FC<SourcingInquiryFormProps> = ({
   if (submitted) {
     return (
       <View style={styles.successContainer}>
-        <CheckCircle2 size={44} color={colors.success} />
-        <Text style={[typography.titleMd, styles.successTitle]}>
+        <CheckCircle2 size={36} color={colors.success} />
+        <Text style={[typography.titleSm, styles.successTitle]}>
           {t('forms.submitted')}
         </Text>
-        <Text style={[typography.bodySm, styles.successSubtitle]}>
+        <Text style={[typography.captionSm, styles.successSubtitle]}>
           {t('forms.submittedBody')}
         </Text>
       </View>
@@ -79,10 +79,10 @@ export const SourcingInquiryForm: React.FC<SourcingInquiryFormProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[typography.titleMd, styles.title]}>
+      <Text style={[typography.titleSm, styles.title]}>
         {t('forms.inquiryTitle')}
       </Text>
-      <Text style={[typography.bodySm, styles.subtitle]}>
+      <Text style={[typography.captionSm, styles.subtitle]}>
         {t('forms.inquiryBody')}
       </Text>
 
@@ -98,40 +98,44 @@ export const SourcingInquiryForm: React.FC<SourcingInquiryFormProps> = ({
         label={t('forms.brandProduct')}
         value={brand}
         onChangeText={setBrand}
-        placeholder="e.g. Oreo / Cadbury / Local Bakery"
+        placeholder="e.g. Parle-G, McVitie's"
         containerStyle={styles.field}
       />
 
       <Input
-        label={t('forms.refUrl')}
+        label={t('forms.disclosureUrl')}
         value={evidenceUrl}
         onChangeText={setEvidenceUrl}
-        placeholder="https://brand.com/faq or public certificate link"
-        keyboardType="url"
+        placeholder="https://..."
         autoCapitalize="none"
+        keyboardType="url"
+        helperText={t('forms.disclosureUrlHelper')}
         containerStyle={styles.field}
       />
 
       <Input
-        label={t('forms.notes')}
+        label={t('forms.additionalEvidence')}
         value={notes}
         onChangeText={setNotes}
-        placeholder="Excerpt from customer care response or packaging certification..."
+        placeholder={t('forms.evidencePlaceholder')}
         multiline
-        numberOfLines={3}
-        error={error || undefined}
+        numberOfLines={2}
         containerStyle={styles.field}
       />
 
+      {error ? (
+        <Text style={[typography.captionSm, styles.errorText]}>{error}</Text>
+      ) : null}
+
       <Button
-        title={t('forms.submit')}
-        icon={<Send size={16} color={colors.white} />}
+        title={isSaving ? t('forms.submitting') : t('forms.submitAudit')}
         onPress={handleSubmit}
-        disabled={isSaving}
+        variant="primary"
+        size="md"
         loading={isSaving}
-        size="lg"
         fullWidth
-        style={styles.btn}
+        style={styles.submitBtn}
+        icon={!isSaving ? <Send size={15} color={colors.white} /> : undefined}
       />
     </View>
   );
@@ -139,36 +143,47 @@ export const SourcingInquiryForm: React.FC<SourcingInquiryFormProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
   },
   title: {
     color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
     marginBottom: spacing.xxs,
   },
   subtitle: {
     color: colors.muted,
-    marginBottom: spacing.lg,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: spacing.sm,
   },
   field: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
-  btn: {
-    marginTop: spacing.sm,
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginBottom: spacing.xs,
+  },
+  submitBtn: {
+    marginTop: spacing.xs,
   },
   successContainer: {
     alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.md,
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
   },
   successTitle: {
     color: colors.ink,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: spacing.sm,
+    marginBottom: spacing.xxs,
   },
   successSubtitle: {
     color: colors.muted,
+    fontSize: 13,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });

@@ -2,6 +2,22 @@
 
 Files: `src/app/**`, `src/components/**`, `src/design-system/**`, `app.json`, `package.json`, PRD Sec 6–20.
 
+## Motion system (2026-10-28 warm-minimalism pass)
+
+App-wide animation vocabulary now lives in `src/design-system/motion.ts` — every screen consumes it, no ad-hoc timings:
+
+- **Tokens**: `motion = {press:120, fast:150, base:220, slow:300, reveal:380, stagger:35, scanBeam:1600}`; `springs = {settle, snap, reveal}` (Reanimated v4 dampingRatio/duration form); `PRESS_SCALE=0.97` (buttons/cards), `ROW_SCALE=0.985` (full-width rows), `staggerDelay(index, base)` (35ms; usage caps the index so entrance totals stay ≤~350ms).
+- **Shared primitives** (exported from `src/components/ui`): `PressableScale` (CSS-transition scale press, accepts PressableProps + `scaleTo`; content styling goes on child elements because the inner `Animated.View` breaks e.g. space-between on PressableScale's own style) and `FadeSlideIn` (fade + 10px-up entrance, reduced-motion aware — never on virtualized rows, container-level only).
+- **Warm color layer** in `colors.ts`: peach/peachSoft/peachDeep/terracotta, heroFrom/heroTo (charcoal→warm-terracotta gradient; no purple/violet per brand rule) + `expo-linear-gradient` hero on Home.
+- **Trust rule (non-negotiable)**: green/success motion (pulse, celebratory scale) ONLY for positively verified verdicts — vegetarian-only, one 1.05 pulse then settle. Source Undisclosed/Dependent/Unknown/no-evidence states get identical neutral reveals, no green tint, no pulse (no-evidence uses `UnknownAdditiveIllustration` on a neutral surfaceSoft card).
+- **Honest progress**: scanner stage copy (`Reading label…` → `Checking ingredient registry…`) only while the real work runs; no fake "Building verdict" on the barcode path.
+- **Haptics restraint**: one haptic per action, same frame as the visual — `selectionAsync()` for actual selections (filter chips, diet, language), `impactAsync(Light)` once per committed barcode detection (guarded behind the 1500ms dedupe), none on navigation/switches.
+- **Reduced motion**: `useReducedMotion()` gates — FadeSlideIn renders static, scanner beam renders a static line, bracket springs static, verdict pulse/flash skipped.
+- **Micro-illustrations** (`src/components/illustrations/Illustrations.tsx`): ScanFirst (history empty), ScanHero (home hero), OfflineShield, UnknownAdditive — one consistent rounded coral/ink-on-peach style, used sparingly, never random decoration.
+- Known small i18n gap: continue-row/hero reuses existing strings; `common.continue` and `home.heroTitle` would make them fully localizable.
+
+New deps: `react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler`, `expo-haptics`, `expo-linear-gradient` (SDK 57 compatible). Reanimated v4 rules: `.get()/.set()` (never `.value`), `scheduleOnRN` over `runOnJS`, no per-frame setState, no height/width animation.
+
 ## Navigation
 
 - Missing routes (Critical): `(auth)/login.tsx`, `scan/barcode|ingredients|processing.tsx` — only `scan/index.tsx` + `(auth)/onboarding.tsx` exist. Either add or collapse IA to `scan/index?mode=`.

@@ -27,7 +27,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ evidence, style }) =
     <View style={[styles.card, shadows.subtle, style]}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <FileText size={18} color={colors.primary} style={styles.icon} />
+          <FileText size={15} color={colors.primary} style={styles.icon} />
           <View style={styles.titleTextWrapper}>
             <Text style={[typography.titleSm, styles.title]} numberOfLines={1}>
               {evidence.sourceTitle}
@@ -44,7 +44,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ evidence, style }) =
 
       <View style={styles.footer}>
         <View style={styles.confidenceRow}>
-          <ShieldCheck size={14} color={colors.muted} />
+          <ShieldCheck size={13} color={colors.muted} />
           <Text style={[typography.micro, styles.confidenceText]}>
             {t('evidence.quality', { score: evidence.confidenceScore })}
           </Text>
@@ -54,13 +54,14 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ evidence, style }) =
           <Pressable
             onPress={handleOpenSource}
             accessibilityRole="link"
+            hitSlop={4}
             style={({ pressed }) => [
               styles.linkButton,
               { opacity: pressed ? 0.7 : 1 },
             ]}
           >
             <Text style={[typography.micro, styles.linkText]}>{t('evidence.viewAudit')}</Text>
-            <ExternalLink size={12} color={colors.primary} style={{ marginLeft: 3 }} />
+            <ExternalLink size={11} color={colors.primary} style={{ marginLeft: 3 }} />
           </Pressable>
         )}
       </View>
@@ -73,15 +74,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm + 2,
+    marginBottom: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -97,25 +98,33 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
   },
   date: {
     color: colors.mutedSoft,
+    fontSize: 10,
+    marginTop: 1,
   },
   snippetContainer: {
     backgroundColor: colors.surfaceSoft,
-    padding: spacing.md,
     borderRadius: radius.sm,
-    marginBottom: spacing.sm,
+    padding: spacing.xs + 2,
+    marginBottom: spacing.xs,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.hairline,
   },
   snippet: {
     color: colors.body,
+    fontSize: 12,
+    lineHeight: 16,
     fontStyle: 'italic',
-    lineHeight: 20,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: 2,
   },
   confidenceRow: {
     flexDirection: 'row',
@@ -124,17 +133,16 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     color: colors.muted,
+    fontSize: 11,
   },
   linkButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    paddingVertical: 2,
   },
   linkText: {
     color: colors.primary,
     fontWeight: '600',
+    fontSize: 11,
   },
 });

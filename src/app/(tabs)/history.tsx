@@ -9,11 +9,16 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Database, WifiOff, Trash2, ChevronRight } from 'lucide-react-native';
+import { Database, Trash2, ChevronRight } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../../design-system/colors';
 import { typography } from '../../design-system/typography';
 import { spacing, radius, shadows } from '../../design-system/spacing';
 import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { FadeSlideIn } from '../../components/ui/FadeSlideIn';
+import { ScanFirstIllustration } from '../../components/illustrations/Illustrations';
 import { formatScannedAt } from '../../utils/format';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { Product } from '../../types';
@@ -37,6 +42,9 @@ export default function HistoryScreen() {
   };
 
   const handleClear = async () => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {}
     await clearHistory();
   };
 
@@ -46,7 +54,7 @@ export default function HistoryScreen() {
       <View style={[styles.cacheBanner, shadows.subtle]}>
         <View style={styles.cacheLeft}>
           <View style={styles.cacheIconCircle}>
-            <Database size={18} color={colors.primary} />
+            <Database size={15} color={colors.primary} />
           </View>
           <View style={styles.cacheTextCol}>
             <Text style={[typography.titleSm, styles.cacheTitle]}>
@@ -57,22 +65,22 @@ export default function HistoryScreen() {
             </Text>
           </View>
         </View>
-        <Badge label="Active" status="vegetarian" size="sm" style={{ flexShrink: 0 }} />
+        <Badge label="Active" status="vegetarian" size="sm" showDot style={{ flexShrink: 0 }} />
       </View>
 
       <View style={styles.sectionTitleRow}>
-        <Text style={[typography.titleMd, styles.sectionTitle]}>
+        <Text style={[typography.titleSm, styles.sectionTitle]}>
           {t('history.recent')}
         </Text>
         {historyItems.length > 0 && (
           <Pressable
             onPress={handleClear}
-            hitSlop={8}
+            hitSlop={6}
             style={styles.clearBtn}
             accessibilityLabel={t('history.clearAll')}
           >
-            <Trash2 size={16} color={colors.muted} />
-            <Text style={[typography.captionSm, styles.clearText]}>{t('history.clearLabel')}</Text>
+            <Trash2 size={13} color={colors.muted} />
+            <Text style={[typography.micro, styles.clearText]}>{t('history.clearLabel')}</Text>
           </Pressable>
         )}
       </View>
@@ -83,72 +91,82 @@ export default function HistoryScreen() {
     ({ item }: { item: Product }) => {
       const config = colors.verdicts[item.verdict];
       return (
-        <Pressable
+        <PressableScale
           onPress={() => router.push(`/product/${item.id}` as any)}
-          style={({ pressed }) => [
-            styles.historyCard,
-            shadows.subtle,
-            { transform: [{ scale: pressed ? 0.99 : 1 }] },
-          ]}
+          scaleTo={0.985}
+          haptic
+          accessibilityRole="button"
+          accessibilityLabel={item.name}
         >
-          <View style={styles.cardHeader}>
-            <View style={styles.brandRow}>
-              <Text style={[typography.captionSm, styles.brandText]}>
-                {item.brand}
-              </Text>
-              <Text style={[typography.captionSm, styles.timeText]}>
-                {formatScannedAt(item.scannedAt)}
+          <View style={[styles.historyCard, shadows.subtle]}>
+            <View style={styles.cardHeader}>
+              <View style={styles.brandRow}>
+                <Text style={[typography.micro, styles.brandText]}>
+                  {item.brand.toUpperCase()}
+                </Text>
+                <Text style={[typography.micro, styles.timeText]}>
+                  {formatScannedAt(item.scannedAt)}
+                </Text>
+              </View>
+              <Text style={[typography.titleSm, styles.productName]} numberOfLines={1}>
+                {item.name}
               </Text>
             </View>
-            <Text style={[typography.titleMd, styles.productName]}>
-              {item.name}
-            </Text>
-          </View>
 
-          <View style={styles.cardFooter}>
-            <View style={styles.tagsRow}>
-              <Badge label={config.label} status={item.verdict} size="sm" />
-              {item.isCachedOffline && (
-                <View style={styles.offlineTag}>
-                  <Database size={12} color={colors.muted} />
-                  <Text style={[typography.micro, styles.offlineTagText]}>
-                    {t('history.storedLocally')}
-                  </Text>
-                </View>
-              )}
+            <View style={styles.cardFooter}>
+              <View style={styles.tagsRow}>
+                <Badge label={config.label} status={item.verdict} size="sm" showDot />
+                {item.isCachedOffline && (
+                  <View style={styles.offlineTag}>
+                    <View style={styles.offlineDot} />
+                    <Text style={[typography.micro, styles.offlineTagText]}>
+                      {t('history.stored')}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <ChevronRight size={14} color={colors.muted} />
             </View>
-            <ChevronRight size={18} color={colors.muted} />
           </View>
-        </Pressable>
+        </PressableScale>
       );
     },
-    [router]
+    [router, t]
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={historyItems}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Database size={44} color={colors.mutedSoft} />
-            <Text style={[typography.titleMd, styles.emptyTitle]}>
-              {t('history.empty')}
-            </Text>
-            <Text style={[typography.bodySm, styles.emptySubtitle]}>
-              {t('history.emptyBody')}
-            </Text>
-          </View>
-        }
-      />
+      <FadeSlideIn style={styles.listWrap}>
+        <FlatList
+          data={historyItems}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderHeader}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <FadeSlideIn style={styles.emptyContainer}>
+              <ScanFirstIllustration size={72} />
+              <Text style={[typography.titleSm, styles.emptyTitle]}>
+                {t('history.empty')}
+              </Text>
+              <Text style={[typography.captionSm, styles.emptySubtitle]}>
+                {t('history.emptyBody')}
+              </Text>
+              <Button
+                title={t('history.emptyCta')}
+                variant="primary"
+                size="sm"
+                onPress={() => router.push('/scan' as any)}
+                style={styles.emptyCta}
+              />
+            </FadeSlideIn>
+          }
+        />
+      </FadeSlideIn>
     </View>
   );
 }
@@ -156,101 +174,110 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.canvas,
+    backgroundColor: colors.surfaceSoft,
+  },
+  listWrap: {
+    flex: 1,
   },
   listContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: spacing.sm + 2,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xl,
   },
   header: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   cacheBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   cacheLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.xs + 2,
     flex: 1,
-    marginRight: spacing.sm,
+    marginRight: spacing.xs,
   },
   cacheTextCol: {
     flex: 1,
   },
   cacheIconCircle: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     borderRadius: radius.full,
-    backgroundColor: colors.canvas,
+    backgroundColor: colors.surfaceSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cacheTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: 2,
-  },
   cacheTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
   },
   cacheSubtitle: {
     color: colors.muted,
+    fontSize: 11,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xxs + 2,
   },
   sectionTitle: {
     color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
   },
   clearBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
   clearText: {
     color: colors.muted,
+    fontSize: 11,
   },
   historyCard: {
     backgroundColor: colors.canvas,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.hairline,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    borderColor: colors.hairlineSoft,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   cardHeader: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xxs,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xxs,
+    marginBottom: 2,
   },
   brandText: {
     color: colors.muted,
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   timeText: {
     color: colors.mutedSoft,
+    fontSize: 10,
   },
   productName: {
     color: colors.ink,
+    fontSize: 14,
+    fontWeight: '600',
   },
   cardFooter: {
     flexDirection: 'row',
@@ -258,7 +285,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: colors.hairlineSoft,
-    paddingTop: spacing.xs,
+    paddingTop: spacing.xxs + 2,
+    marginTop: 2,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -269,27 +297,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: colors.surfaceStrong,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: radius.xs,
+  },
+  offlineDot: {
+    width: 5,
+    height: 5,
+    borderRadius: radius.full,
+    backgroundColor: colors.verdicts.vegetarian.color,
   },
   offlineTagText: {
     color: colors.muted,
+    fontSize: 10,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xxxl,
-    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.lg,
   },
   emptyTitle: {
     color: colors.ink,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: spacing.sm,
+    marginBottom: spacing.xxs,
   },
   emptySubtitle: {
     color: colors.muted,
+    fontSize: 12,
     textAlign: 'center',
+  },
+  emptyCta: {
+    marginTop: spacing.md,
   },
 });

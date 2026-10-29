@@ -7,7 +7,7 @@ Source of synthesised truth for the VegTrace Expo codebase. Raw sources (`VegTra
 - `architecture.md` — actual vs PRD Sec 43 folder architecture, stack, type design
 - `issues.md` — master prioritized issue list (Critical → Low), deduplicated across all 6 scans
 - `services-logic.md` — ingredientEngine / knowledgeBase / openFoodFacts / storage findings
-- `mobile-ui.md` — Expo Router, navigation, design-system, a11y findings
+- `mobile-ui.md` — Expo Router, navigation, design-system, a11y findings + 2026-10-28 motion system
 - `security.md` — defensive audit (OWASP Mobile), privacy findings
 - `performance.md` — bundle, lists, images, network, memory findings
 - `testing.md` — coverage gaps + reliability checklist status
